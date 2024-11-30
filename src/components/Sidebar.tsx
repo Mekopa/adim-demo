@@ -11,8 +11,9 @@ import {
   ChevronLeft,
   Scale
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+
 import SettingsModal from './settings/SettingsModal';
+import useAuth from '../contexts/useAuth';
 
 const navigation = [
   { name: 'Workflows', href: '/workflows', icon: FileText },

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FolderOpen, Users, MessageSquare } from 'lucide-react';
+import { Upload, FolderOpen, Users} from 'lucide-react';
 import Modal from '../shared/Modal';
 import FileUploadArea from './FileUploadArea';
 import { UploadedFile } from '../../types';
@@ -35,13 +35,7 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full p-8">
       <div className="bg-white rounded-xl shadow-sm p-8 max-w-2xl w-full">
-        <div className="text-center mb-8">
-          <div className="bg-blue-50 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <MessageSquare className="w-8 h-8 text-blue-600" />
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Start a Conversation</h2>
-          <p className="text-gray-500">Upload documents or select from existing sources to begin</p>
-        </div>
+
 
         <div className="space-y-6">
           <FileUploadArea files={files} onFilesChange={setFiles} />

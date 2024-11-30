@@ -9,6 +9,15 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface TokenResponse {
+  access: string;
+  refresh: string;
+}
+
+export interface TokenRefreshResponse {
+  access: string;
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

@@ -1,77 +1,69 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { User, LoginCredentials, AuthState } from '../types/auth';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { LoginCredentials } from '../types/auth';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
 
-interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<void>;
-  logout: () => void;
+interface AuthProviderProps {
+  children: ReactNode;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+interface AuthContextProps {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => void;
+  
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    error: null,
-  });
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login
-      const user: User = {
-        id: '1',
-        email: credentials.email,
-        name: 'John Doe',
-      };
-      
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-
-      // Get the redirect path from location state or default to home
-      const from = (location.state as any)?.from?.pathname || '/';
-      navigate(from, { replace: true });
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: 'Invalid email or password',
-      }));
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      setIsAuthenticated(true);
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     }
-  }, [navigate, location]);
+  }, []);
 
-  const logout = useCallback(() => {
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
+  const login = async (credentials: LoginCredentials) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.post('token/', credentials);
+      const { access, refresh } = response.data;
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('refreshToken', refresh);
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access}`;
+      setIsAuthenticated(true);
+      navigate('/');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Invalid email or password.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    delete axiosInstance.defaults.headers.common['Authorization'];
+    setIsAuthenticated(false);
     navigate('/login');
-  }, [navigate]);
+  };
 
   return (
-    <AuthContext.Provider value={{ ...authState, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export default AuthContext;
