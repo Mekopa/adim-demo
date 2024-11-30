@@ -1,29 +1,37 @@
+// src/components/DocumentCard.tsx
+
 import React from 'react';
-import * as Icons from 'lucide-react';
-import { DocumentTemplate } from '../types';
+import { FormTemplate } from '../types/workflow';
+import { FileText, Scale } from 'lucide-react'; // Import specific icons
 
 interface DocumentCardProps {
-  template: DocumentTemplate;
+  template: FormTemplate['template'];
   onClick: () => void;
 }
 
-export default function DocumentCard({ template, onClick }: DocumentCardProps) {
-  const Icon = Icons[template.icon as keyof typeof Icons];
+const DocumentCard: React.FC<DocumentCardProps> = ({ template, onClick }) => {
+  // Function to render the icon based on the icon name
+  const renderIcon = () => {
+    switch (template.icon) {
+      case 'Scales':
+        return <Scale className="w-6 h-6" />;
+      default:
+        return <FileText className="w-6 h-6" />;
+    }
+  };
 
   return (
-    <button
+    <div
+      className="border rounded-lg p-4 cursor-pointer hover:shadow-lg"
       onClick={onClick}
-      className="bg-background p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 text-left w-full"
     >
-      <div className="flex items-start space-x-4">
-        <div className="p-3 bg-blue-50 rounded-lg">
-          <Icon className="w-6 h-6 text-blue-600" />
-        </div>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">{template.title}</h3>
-          <p className="mt-1 text-sm text-gray-500">{template.description}</p>
-        </div>
+      <div className="flex items-center space-x-2">
+        <div className="text-2xl">{renderIcon()}</div>
+        <h2 className="text-lg font-semibold">{template.title}</h2>
       </div>
-    </button>
+      <p className="mt-2 text-gray-600">{template.description}</p>
+    </div>
   );
-}
+};
+
+export default DocumentCard;
