@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   FileText, 
-  Briefcase, 
-  Users, 
+  Briefcase,
   MessageSquare, 
   Settings, 
   LogOut,
@@ -18,7 +17,6 @@ import useAuth from '../contexts/useAuth';
 const navigation = [
   { name: 'Workflows', href: '/workflows', icon: FileText },
   { name: 'Vault', href: '/vault', icon: Briefcase },
-  { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Assistant', href: '/assistant', icon: MessageSquare },
 ];
 

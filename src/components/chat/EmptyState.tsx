@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, FolderOpen, Users} from 'lucide-react';
+import { FolderOpen} from 'lucide-react';
 import Modal from '../shared/Modal';
 import FileUploadArea from './FileUploadArea';
 import { UploadedFile } from '../../types';
@@ -13,8 +13,7 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showVaultModal, setShowVaultModal] = useState(false);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<string | undefined>();
+  const [selectedCustomer] = useState<string | undefined>();
 
   const handleSubmit = () => {
     if (!query.trim()) {
@@ -34,7 +33,7 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-8">
-      <div className="bg-white rounded-xl shadow-sm p-8 max-w-2xl w-full">
+      <div className="rounded-xl shadow-sm p-8 max-w-2xl w-full">
 
 
         <div className="space-y-6">
@@ -43,17 +42,10 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
           <div className="flex gap-4">
             <button
               onClick={() => setShowVaultModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 p-4  border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <FolderOpen className="w-5 h-5 text-gray-600" />
               <span className="text-gray-600 font-medium">Select from Vault</span>
-            </button>
-            <button
-              onClick={() => setShowCustomerModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 p-4 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Users className="w-5 h-5 text-gray-600" />
-              <span className="text-gray-600 font-medium">Select Customer</span>
             </button>
           </div>
 
@@ -97,26 +89,6 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
           </div>
           <div className="text-center text-gray-500 py-8">
             No documents found in your vault
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        isOpen={showCustomerModal}
-        onClose={() => setShowCustomerModal(false)}
-        title="Select Customer"
-      >
-        <div className="space-y-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search customers..."
-              className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <Users className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>
-          <div className="text-center text-gray-500 py-8">
-            No customers found
           </div>
         </div>
       </Modal>
