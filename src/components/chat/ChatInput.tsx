@@ -33,7 +33,7 @@ export default function ChatInput({ onSend, loading }: ChatInputProps) {
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type your message..."
-            className="w-full resize-none rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent p-3"
+            className="w-full resize-none rounded-lg border text-text border-border focus:ring-2 focus:ring-blue-500 focus:border-transparent p-3"
             rows={1}
             style={{
               minHeight: '44px',

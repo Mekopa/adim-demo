@@ -44,7 +44,7 @@ export default function FileUploadArea({ files, onFilesChange }: FileUploadAreaP
       <div
         {...getRootProps()}
         className={`w-full border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-500 hover:bg-blue-50'}`}
+          ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-border hover:border-blue-500 hover:bg-surface'}`}
       >
         <input {...getInputProps()} />
         <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
@@ -63,19 +63,19 @@ export default function FileUploadArea({ files, onFilesChange }: FileUploadAreaP
           {files.map(file => {
             const FileIcon = getFileIcon(file.type);
             return (
-              <div key={file.id} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                <FileIcon className="w-5 h-5 text-gray-500 mr-2" />
+              <div key={file.id} className="flex items-center p-3 bg-surface rounded-lg">
+                <FileIcon className="w-5 h-5 text-text mr-2" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-sm font-medium text-text truncate">{file.name}</p>
+                  <p className="text-xs text-text-secondary">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
                 </div>
                 <button
                   onClick={() => removeFile(file.id)}
-                  className="p-1 hover:bg-gray-200 rounded-full ml-2"
+                  className="p-1 hover:bg-background rounded-full ml-2"
                 >
-                  <X className="w-4 h-4 text-gray-500" />
+                  <X className="w-4 h-4 text-text" />
                 </button>
               </div>
             );

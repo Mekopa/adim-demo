@@ -42,10 +42,10 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
           <div className="flex gap-4">
             <button
               onClick={() => setShowVaultModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 p-4  border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 p-4  border border-border rounded-lg hover:bg-surface transition-colors"
             >
-              <FolderOpen className="w-5 h-5 text-gray-600" />
-              <span className="text-gray-600 font-medium">Select from Vault</span>
+              <FolderOpen className="w-5 h-5 text-text" />
+              <span className="text-text font-medium">Select from Vault</span>
             </button>
           </div>
 
@@ -54,8 +54,8 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
               value={query}
               onChange={handleQueryChange}
               placeholder="Enter your query about the documents..."
-              className={`w-full resize-none rounded-lg border p-3 min-h-[80px] ${
-                error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              className={`w-full text-text resize-none rounded-lg border p-3 min-h-[80px] ${
+                error ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-blue-500'
               } focus:ring-2 focus:border-transparent`}
               rows={3}
             />

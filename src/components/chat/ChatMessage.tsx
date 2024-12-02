@@ -13,7 +13,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[80%] rounded-lg p-4 ${
-          isUser ? 'bg-blue-600 text-white' : 'bg-white text-gray-900'
+          isUser ? 'bg-surface text-text' : ' text-text'
         }`}
       >
         <div className="flex items-center gap-2 mb-2">
@@ -25,9 +25,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           <span className="font-medium">
             {isUser ? 'You' : 'Assistant'}
           </span>
-          <span className="text-sm opacity-75">
-            {new Date(message.timestamp).toLocaleTimeString()}
-          </span>
+
         </div>
         
         <p className="whitespace-pre-wrap">{message.content}</p>
