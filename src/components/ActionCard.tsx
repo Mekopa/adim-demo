@@ -16,9 +16,9 @@ interface ActionCardProps {
 
 export default function ActionCard({ title, description, icon: Icon, actions }: ActionCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6">
+    <div className="bg-surface rounded-xl shadow-sm p-6">
       <div className="flex items-start space-x-4 mb-6">
-        <div className="p-3 bg-blue-50 rounded-lg">
+        <div className="p-3 bg-surface rounded-lg">
           <Icon className="w-6 h-6 text-blue-600" />
         </div>
         <div>

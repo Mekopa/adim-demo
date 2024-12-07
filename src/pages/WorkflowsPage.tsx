@@ -96,7 +96,7 @@ export default function WorkflowsPage() {
         {/* Document Form in Modal */}
         {selectedForm && !loading && !generatedDocument && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl p-8 w-full max-w-3xl h-full overflow-y-auto relative">
+            <div className="bg-surface rounded-xl p-8 w-full max-w-3xl h-full overflow-y-auto relative">
               <button
                 onClick={() => setSelectedForm(null)}
                 className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -127,9 +127,9 @@ export default function WorkflowsPage() {
         {/* Loading Indicator */}
         {loading && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-8 flex flex-col items-center">
+            <div className="bg-surface rounded-xl p-8 flex flex-col items-center">
               <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-600">Generating your document...</p>
+              <p className="mt-4 text-text">Generating your document...</p>
             </div>
           </div>
         )}
@@ -143,7 +143,7 @@ export default function WorkflowsPage() {
                   setGeneratedDocument(null);
                   setSelectedForm(null);
                 }}
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                className="absolute top-4 right-4 text-text hover:text-gray-700"
               >
                 <svg
                   className="h-6 w-6"

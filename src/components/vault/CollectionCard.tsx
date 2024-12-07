@@ -88,8 +88,8 @@ export default function CollectionCard({
                         active ? 'bg-background' : ''
                       }`}
                     >
-                      <Share2 className="w-4 h-4" />
-                      <span>Share Collection</span>
+                      <Share2 className="text-text-secondary w-4 h-4" />
+                      <span className='text-text-secondary'>Share Collection</span>
                     </button>
                   )}
                 </Menu.Item>
@@ -103,8 +103,8 @@ export default function CollectionCard({
                           active ? 'bg-background' : ''
                         }`}
                       >
-                        <FolderMinus className="w-4 h-4" />
-                        <span>Remove from Group</span>
+                        <FolderMinus className="w-4 h-4 text-red-400" />
+                        <span className='text-red-400'>Remove from Group</span>
                       </button>
                     )}
                   </Menu.Item>

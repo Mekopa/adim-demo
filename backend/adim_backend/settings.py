@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-rh$5s@jpks9of$$+!%j0-h^sw^a!wib-x*-!8kkaf@0_8wdahh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', '.vercel.app']
 
 
 # Application definition
@@ -50,6 +50,8 @@ INSTALLED_APPS = [
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',  # Add other frontend origins if necessary
+    'www.adim.lt',
+    'adim.lt',
     #production url here MERT!!
 ]
 
@@ -118,7 +120,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'adim_db',
         'USER': 'adim_user',
-        'PASSWORD': 'password',
+        'PASSWORD': 'mm1212mm',
         'HOST': 'localhost',  # or 'db' if using Docker
         'PORT': '5432',
     }

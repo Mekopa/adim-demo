@@ -94,7 +94,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
             case 'number':
               return (
                 <div key={question.id}>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-text">
                     {question.label}
                     {question.required && <span className="text-red-500">*</span>}
                   </label>
@@ -104,7 +104,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
                       value={formData[question.id] as string}
                       onChange={handleChange}
                       required={question.required}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      className="mt-1 block w-full border border-border rounded-md p-2"
                     />
                   ) : question.type === 'select' ? (
                     <select
@@ -112,7 +112,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
                       value={formData[question.id] as string}
                       onChange={handleChange}
                       required={question.required}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      className="mt-1 block w-full border border-border rounded-md p-2"
                     >
                       <option value="">Select...</option>
                       {question.options?.map((option) => (
@@ -127,7 +127,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
                       name={question.id}
                       checked={formData[question.id] as boolean}
                       onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-border rounded"
                     />
                   ) : (
                     <input
@@ -136,7 +136,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
                       value={formData[question.id] as string | number}
                       onChange={handleChange}
                       required={question.required}
-                      className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                      className="mt-1 block w-full border border-border rounded-md p-2"
                     />
                   )}
                 </div>
@@ -161,7 +161,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
                             })
                           }
                           required={field.required}
-                          className="mt-1 block w-1/2 border border-gray-300 rounded-md p-2"
+                          className="mt-1 block w-1/2 border border-border rounded-md p-2"
                         />
                       ))}
                       <button
@@ -191,14 +191,14 @@ const DocumentForm: React.FC<DocumentFormProps> = ({ template, onSubmit, onClose
         <div className="flex space-x-4">
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-600 text-text rounded-md hover:bg-blue-700"
           >
             Generate Document
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="px-4 py-2 bg-gray-600 text-text rounded-md hover:bg-gray-700"
           >
             Cancel
           </button>

@@ -44,26 +44,26 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-8">Welcome to LegalFlow</h1>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <h1 className="text-2xl px-16 font-semibold text-text mb-8">Welcome to Your A.D.I.M</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid px-16 grid-cols-1 md:grid-cols-2 gap-6">
         {sections.map((section) => {
           const Icon = section.icon;
           return (
             <button
               key={section.name}
               onClick={() => navigate(section.href)}
-              className="flex items-start p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 text-left w-full group"
+              className="flex items-start p-6 bg-surface rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 text-left w-full group"
             >
               <div className={`p-3 rounded-lg mr-4 ${colorClasses[section.color as keyof typeof colorClasses]}`}>
                 <Icon className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-lg font-semibold text-text group-hover:text-blue-600 transition-colors">
                   {section.name}
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">{section.description}</p>
+                <p className="mt-1 text-sm text-text-secondary">{section.description}</p>
               </div>
             </button>
           );
