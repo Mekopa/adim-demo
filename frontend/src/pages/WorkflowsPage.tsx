@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { forms } from '../forms/index.ts';
-import { DocumentFormData, FormTemplate } from '../types/workflow';
-import DocumentCard from '../components/DocumentCard';
-import DocumentForm from '../components/DocumentForm';
-import DocumentPreview from '../components/DocumentPreview';
+import { DocumentFormData, FormTemplate } from '../types/workflow.ts';
+import DocumentCard from '../components/DocumentCard.tsx';
+import DocumentForm from '../components/DocumentForm.tsx';
+import DocumentPreview from '../components/DocumentPreview.tsx';
 
 export default function WorkflowsPage() {
   const [selectedForm, setSelectedForm] = useState<FormTemplate | null>(null);
