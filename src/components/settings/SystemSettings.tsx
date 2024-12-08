@@ -1,12 +1,11 @@
 import React from 'react';
-import { Monitor, Sun, Moon, CircleDot, Ship } from 'lucide-react';
+import { Monitor, Sun, Moon, Ship } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const themes = [
   { id: 'system', label: 'System', icon: Monitor, description: 'Follow system preferences' },
   { id: 'light', label: 'Light', icon: Sun, description: 'Classic light appearance' },
   { id: 'dark', label: 'Dark', icon: Moon, description: 'Easier on the eyes' },
-  { id: 'oled', label: 'OLED', icon: CircleDot, description: 'True black dark mode' },
   { id: 'navy', label: 'Navy', icon: Ship, description: 'Deep blue appearance' },
 ] as const;
 
