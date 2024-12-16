@@ -33,7 +33,7 @@ export default function WorkflowSteps({ steps, currentStep, onStepClick }: Workf
                     <div className="relative flex h-5 w-5 flex-shrink-0 items-center justify-center">
                       {isCompleted ? (
                         <div className="h-full w-full rounded-full bg-primary group-hover:bg-primary-hover">
-                          <Check className="h-3 w-3 text-white" />
+                          <Check className="h-5 w-5 text-white" />
                         </div>
                       ) : (
                         <div

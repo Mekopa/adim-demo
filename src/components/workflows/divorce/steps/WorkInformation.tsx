@@ -7,18 +7,18 @@ export default function WorkInformation() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium text-gray-900">Work Information</h2>
+      <h2 className="text-lg font-medium text-text">Work Information</h2>
       
       <div className="space-y-4">
         <div>
-          <label htmlFor="spouse1WorkInfo" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="spouse1WorkInfo" className="block text-sm font-medium text-text-secondary">
             Spouse 1 Work Information
           </label>
           <textarea
             id="spouse1WorkInfo"
             {...register('spouse1WorkInfo')}
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md text-text p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             placeholder="Employment details, income, etc..."
           />
           {errors.spouse1WorkInfo && (
@@ -27,14 +27,14 @@ export default function WorkInformation() {
         </div>
 
         <div>
-          <label htmlFor="spouse2WorkInfo" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="spouse2WorkInfo" className="block text-sm font-medium text-text-secondary">
             Spouse 2 Work Information
           </label>
           <textarea
             id="spouse2WorkInfo"
             {...register('spouse2WorkInfo')}
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block p-2 w-full rounded-md border-border text-text shadow-sm focus:border-blue-500 focus:ring-blue-500"
             placeholder="Employment details, income, etc..."
           />
           {errors.spouse2WorkInfo && (

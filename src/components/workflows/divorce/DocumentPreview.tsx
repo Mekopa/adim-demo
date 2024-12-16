@@ -11,7 +11,7 @@ export default function DocumentPreview({ content, onClose }: DocumentPreviewPro
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="prose prose-text max-w-none">
+        <div className="prose prose-text text-text max-w-none">
           <ReactMarkdown>{content}</ReactMarkdown>
         </div>
       </div>
