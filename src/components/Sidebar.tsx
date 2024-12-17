@@ -42,9 +42,9 @@ export default function Sidebar() {
             onClick={() => navigate('/')}
             className="flex items-center gap-3"
           >
-             <Logo className="w-12 h-12 text-primary mx-auto" /> {/* Added mx-auto */}
+             <Logo className="w-12 h-12 text-primary mx-auto" />
             {isExpanded && (
-              <span className="font-bold text-text">ADIM</span>
+              <span className="font-bold text-text">A.D.I.M</span>
             )}
           </button>
           {isExpanded && (
