@@ -8,11 +8,11 @@ import {
   LogOut,
   ChevronRight,
   ChevronLeft,
-  Scale
 } from 'lucide-react';
 
 import SettingsModal from './settings/SettingsModal';
 import useAuth from '../contexts/useAuth';
+import Logo from './shared/icons/Logo';
 
 const navigation = [
   { name: 'Workflows', href: '/workflows', icon: FileText },
@@ -37,12 +37,12 @@ export default function Sidebar() {
         className="flex flex-col bg-surface rounded-r-2xl border-border transition-all duration-300 relative"
         style={{ width: isExpanded ? '240px' : '70px' }}
       >
-        <div className="flex items-center justify-between px-6 py-6 border-border">
+        <div className="flex items-center justify-between px-3 py-4 border-border">
           <button 
             onClick={() => navigate('/')}
             className="flex items-center gap-3"
           >
-            <Scale className="w-6 h-6 text-primary flex-shrink-0" />
+             <Logo className="w-12 h-12 text-primary mx-auto" /> {/* Added mx-auto */}
             {isExpanded && (
               <span className="font-bold text-text">ADIM</span>
             )}
@@ -60,7 +60,7 @@ export default function Sidebar() {
 
         <button
           onClick={() => setIsExpanded(true)}
-          className={`absolute -right-3 top-14 p-1.5 bg-surface border border-border rounded-full hover:bg-background transition-colors ${
+          className={`absolute -right-3 top-16 p-1.5 bg-surface border border-border rounded-full hover:bg-background transition-colors ${
             isExpanded ? 'hidden' : 'block'
           }`}
           aria-label="Open sidebar"
