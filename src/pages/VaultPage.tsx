@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Collection, CollectionGroup } from '../types/vault';
+import { createCollection, fetchCollections, createGroup, fetchGroups } from '../api/vaultService';
+
 import CollectionList from '../components/vault/CollectionList';
 import CollectionView from '../components/vault/CollectionView';
 import SearchBar from '../components/vault/SearchBar';
@@ -18,30 +20,38 @@ export default function VaultPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [groups, setGroups] = useState<CollectionGroup[]>([]);
 
-  // Mock current user
+  // Mock current user (In production, fetch from context or /users/me/)
   const currentUser = {
     id: '1',
     email: 'user@example.com',
-    name: 'Current User'
+    name: 'Current User',
   };
+
+  // Fetch collections and groups on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [fetchedCollections, fetchedGroups] = await Promise.all([
+          fetchCollections(),
+          fetchGroups(),
+        ]);
+        setCollections(fetchedCollections);
+        setGroups(fetchedGroups);
+      } catch (error) {
+        console.error('Failed to fetch collections or groups:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleCreateCollection = async (data: { name: string; description?: string }) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newCollection: Collection = {
-        id: Date.now().toString(),
-        name: data.name,
-        description: data.description || '',
-        createdAt: new Date(),
-        documentCount: 0,
-        owner: currentUser,
-        isPrivate: true
-      };
-
-      setCollections(prev => [...prev, newCollection]);
+      const newCollection = await createCollection({ name: data.name, description: data.description });
+      setCollections((prev) => [...prev, newCollection]);
       setShowCreateModal(false);
     } catch (error) {
       console.error('Failed to create collection:', error);
@@ -53,26 +63,13 @@ export default function VaultPage() {
   const handleCreateGroup = async (data: { name: string; collectionIds: string[] }) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newGroup: CollectionGroup = {
-        id: Date.now().toString(),
-        name: data.name,
-        createdAt: new Date(),
-        owner: currentUser
-      };
-
-      setGroups(prev => [...prev, newGroup]);
-      
-      // Update collections with new groupId
-      setCollections(prev => prev.map(collection => 
-        data.collectionIds.includes(collection.id)
-          ? { ...collection, groupId: newGroup.id }
-          : collection
-      ));
-      
+      const newGroup = await createGroup({ name: data.name, collection_ids: data.collectionIds });
+      setGroups((prev) => [...prev, newGroup]);
       setShowCreateGroupModal(false);
+
+      // Refetch collections to get updated group associations
+      const updatedCollections = await fetchCollections();
+      setCollections(updatedCollections);
     } catch (error) {
       console.error('Failed to create group:', error);
     } finally {
@@ -81,17 +78,19 @@ export default function VaultPage() {
   };
 
   const handleMoveToGroup = (collectionId: string, groupId: string | null) => {
-    setCollections(prev => prev.map(collection => 
-      collection.id === collectionId
-        ? { ...collection, groupId }
-        : collection
-    ));
+    setCollections((prev) =>
+      prev.map((collection) =>
+        collection.id === collectionId
+          ? { ...collection, groupId }
+          : collection
+      )
+    );
   };
 
-  const filteredCollections = collections.filter(collection => {
+  const filteredCollections = collections.filter((collection) => {
     const matchesSearch = collection.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesView = showShared 
-      ? collection.owner.id !== currentUser.id 
+    const matchesView = showShared
+      ? collection.owner.id !== currentUser.id
       : collection.owner.id === currentUser.id;
     return matchesSearch && matchesView;
   });
