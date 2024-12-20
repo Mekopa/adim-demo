@@ -94,7 +94,7 @@ export default function CollectionCard({
                   )}
                 </Menu.Item>
                 
-                {collection.groupId && onRemoveFromGroup && (
+                {collection.group && onRemoveFromGroup && (
                   <Menu.Item>
                     {({ active }) => (
                       <button

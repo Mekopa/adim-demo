@@ -12,7 +12,7 @@ interface CollectionListProps {
   currentUser: User;
   onSelect: (collection: Collection) => void;
   showSearch: boolean;
-  onMoveToGroup: (collectionId: string, groupId: string | null) => void;
+  onMoveToGroup: (collectionId: string, group: string | null) => void;
 }
 
 export default function CollectionList({ 
@@ -41,32 +41,33 @@ export default function CollectionList({
 
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  // Group collections by their groupId
+  // Group collections by their group
   const groupedCollections = collections.reduce((acc, collection) => {
-    if (collection.groupId) {
-      const existing = acc.get(collection.groupId) || [];
-      acc.set(collection.groupId, [...existing, collection]);
+    if (collection.group) { // collection.group is a number representing the group's id
+      const key = String(collection.group);
+      const existing = acc.get(key) || [];
+      acc.set(key, [...existing, collection]);
     }
     return acc;
   }, new Map<string, Collection[]>());
 
   // Get ungrouped collections
-  const ungroupedCollections = collections.filter(c => !c.groupId);
+  const ungroupedCollections = collections.filter(c => c.group === null);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+  
     if (over && active.data.current?.type === 'collection') {
-      const collectionId = active.id as string;
-      const groupId = over.id as string;
-      
-      // Only update if dropping into a different group
+      const collectionId = Number(active.id);  // convert to number if collection.id is a number
+      const targetGroupId = over.id === 'ungrouped' ? null : Number(over.id);
+  
       const collection = collections.find(c => c.id === collectionId);
-      if (collection && collection.groupId !== groupId) {
-        onMoveToGroup(collectionId, groupId);
+      if (collection && collection.group !== targetGroupId) {
+        // Now call onMoveToGroup with correct data
+        onMoveToGroup(String(collectionId), targetGroupId ? String(targetGroupId) : null);
       }
     }
-    
+  
     setActiveId(null);
   };
 
@@ -87,7 +88,7 @@ export default function CollectionList({
       <div className="space-y-8">
         {/* Grouped Collections */}
         {groups.map(group => {
-          const groupCollections = groupedCollections.get(group.id) || [];
+          const groupCollections = groupedCollections.get(String(group.id)) || [];
           if (showSearch && groupCollections.length === 0) return null;
           
           return (

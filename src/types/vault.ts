@@ -33,7 +33,7 @@ export interface User {
     owner: User;
     isPrivate: boolean;
     sharedWith?: User[];
-    groupId?: string;
+    group?: string;
   }
   
   export interface CollectionGroup {
@@ -47,7 +47,7 @@ export interface User {
   export interface CreateCollectionInput {
     name: string;
     description?: string;
-    groupId?: string;
+    group?: string;
   }
   
   export interface CreateGroupInput {

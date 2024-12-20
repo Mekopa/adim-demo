@@ -1,3 +1,5 @@
+// src/pages/VaultPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Collection, CollectionGroup } from '../types/vault';
@@ -9,8 +11,11 @@ import SearchBar from '../components/vault/SearchBar';
 import ViewToggle from '../components/vault/ViewToggle';
 import CreateCollectionModal from '../components/vault/CreateCollectionModal';
 import CreateGroupModal from '../components/vault/CreateGroupModal';
+import { useAuth } from '../contexts/AuthContext';
+import axiosInstance from '../api/axiosInstance';
 
 export default function VaultPage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showShared, setShowShared] = useState(false);
@@ -20,22 +25,18 @@ export default function VaultPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [groups, setGroups] = useState<CollectionGroup[]>([]);
 
-  // Mock current user (In production, fetch from context or /users/me/)
-  const currentUser = {
-    id: '1',
-    email: 'user@example.com',
-    name: 'Current User',
-  };
-
-  // Fetch collections and groups on mount
   useEffect(() => {
     const fetchData = async () => {
+      if (authLoading || !isAuthenticated || !user) return;
+
       setIsLoading(true);
       try {
         const [fetchedCollections, fetchedGroups] = await Promise.all([
           fetchCollections(),
           fetchGroups(),
         ]);
+        console.log('Fetched Collections:', fetchedCollections);
+        console.log('Fetched Groups:', fetchedGroups);
         setCollections(fetchedCollections);
         setGroups(fetchedGroups);
       } catch (error) {
@@ -45,7 +46,7 @@ export default function VaultPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [authLoading, isAuthenticated, user]);
 
   const handleCreateCollection = async (data: { name: string; description?: string }) => {
     setIsLoading(true);
@@ -60,16 +61,19 @@ export default function VaultPage() {
     }
   };
 
-  const handleCreateGroup = async (data: { name: string; collectionIds: string[] }) => {
+  const handleCreateGroup = async (data: { name: string; collectionIds: number[] }) => {
     setIsLoading(true);
     try {
-      const newGroup = await createGroup({ name: data.name, collection_ids: data.collectionIds });
+      const newGroup = await createGroup({ name: data.name, collections: data.collectionIds });
       setGroups((prev) => [...prev, newGroup]);
-      setShowCreateGroupModal(false);
 
-      // Refetch collections to get updated group associations
+      // Refetch collections and groups to see updated associations
       const updatedCollections = await fetchCollections();
+      const updatedGroups = await fetchGroups();
       setCollections(updatedCollections);
+      setGroups(updatedGroups);
+
+      setShowCreateGroupModal(false);
     } catch (error) {
       console.error('Failed to create group:', error);
     } finally {
@@ -77,21 +81,45 @@ export default function VaultPage() {
     }
   };
 
-  const handleMoveToGroup = (collectionId: string, groupId: string | null) => {
-    setCollections((prev) =>
-      prev.map((collection) =>
-        collection.id === collectionId
-          ? { ...collection, groupId }
-          : collection
-      )
-    );
+  const handleMoveToGroup = async (collectionId: number, targetGroupId: number | null) => {
+    setIsLoading(true);
+    try {
+      if (targetGroupId === null) {
+        // Unassign the collection from any group
+        await axiosInstance.patch(`/collections/${collectionId}/`, { group: null });
+      } else {
+        // Assign the collection to the target group
+        await axiosInstance.patch(`/collections/${collectionId}/`, { group: targetGroupId });
+      }
+
+      // Refetch data
+      const [fetchedCollections, fetchedGroups] = await Promise.all([
+        fetchCollections(),
+        fetchGroups(),
+      ]);
+      setCollections(fetchedCollections);
+      setGroups(fetchedGroups);
+    } catch (error) {
+      console.error('Error moving collection to group:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Loading or unauthenticated state
+  if (authLoading) {
+    return <div>Loading authentication...</div>;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <div>You must be logged in to view collections.</div>;
+  }
 
   const filteredCollections = collections.filter((collection) => {
     const matchesSearch = collection.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesView = showShared
-      ? collection.owner.id !== currentUser.id
-      : collection.owner.id === currentUser.id;
+      ? collection.owner.id !== user.id
+      : collection.owner.id === user.id;
     return matchesSearch && matchesView;
   });
 
@@ -133,7 +161,7 @@ export default function VaultPage() {
       <CollectionList
         collections={filteredCollections}
         groups={groups}
-        currentUser={currentUser}
+        currentUser={user}
         onSelect={setSelectedCollection}
         showSearch={searchQuery.length > 0}
         onMoveToGroup={handleMoveToGroup}
@@ -151,7 +179,7 @@ export default function VaultPage() {
         onClose={() => setShowCreateGroupModal(false)}
         onSubmit={handleCreateGroup}
         isLoading={isLoading}
-        collections={collections}
+        collections={collections.filter((c) => c.group === null)} // Only allow ungrouped collections
       />
     </div>
   );

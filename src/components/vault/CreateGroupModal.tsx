@@ -25,7 +25,7 @@ export default function CreateGroupModal({
   isLoading,
   collections,
 }: CreateGroupModalProps) {
-  const ungroupedCollections = collections.filter(c => !c.groupId);
+  const ungroupedCollections = collections.filter(c => !c.groups || c.groups.length === 0);
   
   const {
     register,

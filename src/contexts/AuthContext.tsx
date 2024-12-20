@@ -2,15 +2,23 @@
 
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance'; // Adjust the path as necessary
-import { jwtDecode } from 'jwt-decode'; // Correct named import
+import axiosInstance from '../api/axiosInstance';
+import { jwtDecode } from 'jwt-decode';  // Ensure correct default import
+                                      // If you get an error, use: import jwtDecode from 'jwt-decode';
 
 interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  name?: string; // Add more fields if your /api/users/me/ returns more
+}
+
 interface AuthContextProps {
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -18,7 +26,7 @@ interface AuthContextProps {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined); // Named export
+const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -26,11 +34,12 @@ interface AuthProviderProps {
 
 interface DecodedToken {
   exp: number;
-  // Add other token properties as needed
+  // Add other token properties if needed
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +62,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const fetchCurrentUser = async (): Promise<User | null> => {
+    try {
+      const response = await axiosInstance.get('/users/me/');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch user data:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
@@ -60,14 +79,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (accessToken && checkTokenValidity(accessToken)) {
         setAxiosAuthToken(accessToken);
-        setIsAuthenticated(true);
+        const currentUser = await fetchCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+          setIsAuthenticated(true);
+        } else {
+          // If user fetch fails, logout
+          logout();
+        }
       } else if (refreshToken) {
         try {
           const response = await axiosInstance.post('/token/refresh/', { refresh: refreshToken });
           const { access } = response.data;
           localStorage.setItem('accessToken', access);
           setAxiosAuthToken(access);
-          setIsAuthenticated(true);
+
+          const currentUser = await fetchCurrentUser();
+          if (currentUser) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+          } else {
+            logout();
+          }
         } catch (err) {
           console.error('Token refresh failed:', err);
           logout();
@@ -91,8 +124,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('accessToken', access);
       localStorage.setItem('refreshToken', refresh);
       setAxiosAuthToken(access);
-      setIsAuthenticated(true);
-      navigate('/'); // Redirect to home or desired route
+
+      const currentUser = await fetchCurrentUser();
+      if (currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        navigate('/'); // Redirect to home or desired route
+      } else {
+        logout();
+      }
+
     } catch (err: any) {
       console.error('Login error:', err);
       if (err.response && err.response.status === 401) {
@@ -110,20 +151,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('refreshToken');
     removeAxiosAuthToken();
     setIsAuthenticated(false);
+    setUser(null);
     navigate('/login'); // Redirect to login page
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, error, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, error, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Named export for AuthContext
 export { AuthContext };
 
-// Custom hook to use the AuthContext
 export const useAuth = (): AuthContextProps => {
   const context = useContext(AuthContext);
   if (context === undefined) {

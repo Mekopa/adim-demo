@@ -33,7 +33,7 @@ export default function DraggableCollectionCard({
 
   return (
     <div ref={setNodeRef} style={style} className="group relative">
-      {!collection.groupId && (
+      {!collection.group && (
         <div 
           {...attributes} 
           {...listeners}
@@ -43,7 +43,7 @@ export default function DraggableCollectionCard({
         </div>
       )}
       
-      <div className={!collection.groupId ? 'pl-10' : undefined}>
+      <div className={!collection.group ? 'pl-10' : undefined}>
         <CollectionCard
           collection={collection}
           isOwner={isOwner}
