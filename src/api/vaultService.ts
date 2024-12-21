@@ -21,6 +21,10 @@ export const updateCollection = async (id: string, data: Partial<Collection>): P
   return response.data;
 };
 
+export const deleteCollection = async (id: number): Promise<void> => {
+  await axiosInstance.delete(`/collections/${id}/`);
+};
+
 // Documents
 export const uploadDocument = async (data: FormData): Promise<Document> => {
   const response = await axiosInstance.post('/documents/', data, {

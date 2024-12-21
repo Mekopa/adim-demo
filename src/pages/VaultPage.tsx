@@ -28,7 +28,6 @@ export default function VaultPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (authLoading || !isAuthenticated || !user) return;
-
       setIsLoading(true);
       try {
         const [fetchedCollections, fetchedGroups] = await Promise.all([
@@ -61,13 +60,17 @@ export default function VaultPage() {
     }
   };
 
+  const handleDeleteSuccess = (deletedCollectionId: number) => {
+    // Immediately update state to remove the deleted collection
+    setCollections((prev) => prev.filter(c => c.id !== deletedCollectionId));
+  };
+
   const handleCreateGroup = async (data: { name: string; collectionIds: number[] }) => {
     setIsLoading(true);
     try {
       const newGroup = await createGroup({ name: data.name, collections: data.collectionIds });
       setGroups((prev) => [...prev, newGroup]);
 
-      // Refetch collections and groups to see updated associations
       const updatedCollections = await fetchCollections();
       const updatedGroups = await fetchGroups();
       setCollections(updatedCollections);
@@ -85,14 +88,11 @@ export default function VaultPage() {
     setIsLoading(true);
     try {
       if (targetGroupId === null) {
-        // Unassign the collection from any group
         await axiosInstance.patch(`/collections/${collectionId}/`, { group: null });
       } else {
-        // Assign the collection to the target group
         await axiosInstance.patch(`/collections/${collectionId}/`, { group: targetGroupId });
       }
 
-      // Refetch data
       const [fetchedCollections, fetchedGroups] = await Promise.all([
         fetchCollections(),
         fetchGroups(),
@@ -106,7 +106,6 @@ export default function VaultPage() {
     }
   };
 
-  // Loading or unauthenticated state
   if (authLoading) {
     return <div>Loading authentication...</div>;
   }
@@ -165,6 +164,7 @@ export default function VaultPage() {
         onSelect={setSelectedCollection}
         showSearch={searchQuery.length > 0}
         onMoveToGroup={handleMoveToGroup}
+        onDeleteSuccess={handleDeleteSuccess} // Pass the callback down to CollectionList
       />
 
       <CreateCollectionModal
@@ -179,7 +179,7 @@ export default function VaultPage() {
         onClose={() => setShowCreateGroupModal(false)}
         onSubmit={handleCreateGroup}
         isLoading={isLoading}
-        collections={collections.filter((c) => c.group === null)} // Only allow ungrouped collections
+        collections={collections.filter((c) => c.group === null)}
       />
     </div>
   );

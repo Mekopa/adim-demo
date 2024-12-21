@@ -3,12 +3,14 @@ import { Folder, MoreVertical, Eye, EyeOff, Trash2, User, Share2, FolderMinus } 
 import { Menu } from '@headlessui/react';
 import { Collection } from '../../types/vault';
 import ShareCollectionModal from './ShareCollectionModal';
+import { deleteCollection } from '../../api/vaultService';
 
 interface CollectionCardProps {
   collection: Collection;
   isOwner: boolean;
   onSelect: () => void;
   onRemoveFromGroup?: () => void;
+  onDeleteSuccess?: (deletedCollectionId: number) => void;
 }
 
 export default function CollectionCard({ 
@@ -19,6 +21,7 @@ export default function CollectionCard({
 }: CollectionCardProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false); // Add this line
 
   const handleShare = async (data: any) => {
     setIsLoading(true);
@@ -34,10 +37,22 @@ export default function CollectionCard({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this collection?')) {
-      // Handle delete
+      setIsDeleting(true);
+      try {
+        await deleteCollection(collection.id);
+        
+        // Only call onDeleteSuccess if it exists
+        if (onDeleteSuccess) {
+          onDeleteSuccess(collection.id);
+        }
+      } catch (error) {
+        console.error('Failed to delete collection:', error);
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 

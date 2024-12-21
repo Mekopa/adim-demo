@@ -13,6 +13,7 @@ interface CollectionListProps {
   onSelect: (collection: Collection) => void;
   showSearch: boolean;
   onMoveToGroup: (collectionId: string, group: string | null) => void;
+  onDeleteSuccess: (deletedCollectionId: number) => void; // Added this prop
 }
 
 export default function CollectionList({ 
@@ -21,7 +22,7 @@ export default function CollectionList({
   currentUser, 
   onSelect,
   showSearch,
-  onMoveToGroup
+  onMoveToGroup,
 }: CollectionListProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const activeCollection = collections.find(c => c.id === activeId);
