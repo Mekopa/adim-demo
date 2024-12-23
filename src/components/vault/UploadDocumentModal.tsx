@@ -1,26 +1,43 @@
-import React, { useCallback } from 'react';
+// src/components/vault/UploadDocumentModal.tsx
+import React from 'react';
 import { useDropzone } from 'react-dropzone';
-import { X, Upload, File } from 'lucide-react';
-import { Collection } from '../../types/vault';
+import { X, Upload } from 'lucide-react';
+import { Collection, User } from '../../types/vault';
+import { uploadDocumentToCollection } from '../../api/vaultService';
 
 interface UploadDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (files: File[]) => Promise<void>;
   collection: Collection;
   isLoading: boolean;
+  onRefreshDocuments: () => void; // Callback to refetch or update local docs
+  currentUser: User; // Current user prop
 }
 
 export default function UploadDocumentModal({
   isOpen,
   onClose,
-  onUpload,
   collection,
   isLoading,
+  onRefreshDocuments,
 }: UploadDocumentModalProps) {
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    await onUpload(acceptedFiles);
-  }, [onUpload]);
+  const onDrop = async (acceptedFiles: File[]) => {
+    try {
+      for (const file of acceptedFiles) {
+        const uploadedDoc = await uploadDocumentToCollection(file, Number(collection.id));
+        console.log('Uploaded Document ID:', uploadedDoc); // Verify 'id' exists
+      }
+      // Once all uploads are done, refresh doc list
+      const onRefreshDocuments = () => {
+        if (collection) {
+          fetchCollectionData(collection);
+        }
+      };
+    } catch (error: any) {
+      console.error('Failed to upload documents:', error.response?.data || error.message);
+      alert(`Failed to upload documents: ${error.response?.data?.detail || error.message}`);
+    }
+  }; 
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

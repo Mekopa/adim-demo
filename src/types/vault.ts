@@ -25,6 +25,7 @@ export interface User {
   }
   
   export interface Collection {
+    documents: any;
     id: string;
     name: string;
     description: string;

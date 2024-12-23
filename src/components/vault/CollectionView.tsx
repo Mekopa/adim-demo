@@ -4,13 +4,16 @@ import { Collection, Document } from '../../types/vault';
 import DocumentGrid from './DocumentGrid';
 import UploadDocumentModal from './UploadDocumentModal';
 import { extractFileMetadata } from '../../utils/fileUtils';
+import { User } from '../../types/auth';
+import { getCollectionById } from '../../api/vaultService';
 
 interface CollectionViewProps {
   collection: Collection;
   onBack: () => void;
+  currentUser: User;
 }
 
-export default function CollectionView({ collection, onBack }: CollectionViewProps) {
+export default function CollectionView({ collection, onBack, currentUser }: CollectionViewProps) {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -47,9 +50,21 @@ export default function CollectionView({ collection, onBack }: CollectionViewPro
     }
   };
 
-  const handleDeleteDocument = async (id: string) => {
+  const fetchCollectionData = async (id: number) => {
     try {
-      setDocuments(prev => prev.filter(doc => doc.id !== id));
+      // This call should return { id, name, documents: [...] }
+      const { data } = await getCollectionById(id);
+      setCollection(data);
+      setDocuments(data.documents || []);
+    } catch (error) {
+      console.error('Failed to fetch collection data:', error);
+    }
+  };
+
+  const handleDeleteDocument = async (id: number) => {
+    try {
+      await deleteDocument(id);
+      fetchCollectionData(collectionId);
     } catch (error) {
       console.error('Failed to delete document:', error);
     }
@@ -97,6 +112,7 @@ export default function CollectionView({ collection, onBack }: CollectionViewPro
         onUpload={handleUpload}
         collection={collection}
         isLoading={isLoading}
+        currentUser={currentUser} // Pass the current user here
       />
     </div>
   );

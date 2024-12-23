@@ -1,9 +1,50 @@
 // src/services/vaultService.ts
 
 import axiosInstance from './axiosInstance';
-
-// Types
 import { Collection, CollectionGroup, Document } from '../types/vault';
+
+interface UploadDocumentResponse {
+  id: number;
+  owner: number;
+  file: string;
+  file_type: string;
+  name: string;
+  description: string | null;
+  uploaded_at: string;
+  is_private: boolean;
+  collections: number[];
+}
+
+export const uploadDocumentToCollection = async (
+  file: File,
+  collectionId: number,
+): Promise<UploadDocumentResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', file.name);
+  formData.append('collections', collectionId.toString()); // Ensure correct key and format
+
+  try {
+    const response = await axiosInstance.post('/documents/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('Error uploading document:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const fetchCollectionById = async (id: string): Promise<Collection> => {
+  const response = await axiosInstance.get(`/collections/${id}/`); // Adjust endpoint if necessary
+  return response.data;
+};
+
+export const getCollectionById = (id: number) => {
+  return axiosInstance.get(`/api/collections/${id}/`);
+};
 
 // Collections
 export const createCollection = async (data: { name: string; description?: string }): Promise<Collection> => {
