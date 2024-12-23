@@ -32,7 +32,7 @@ export default function DocumentListItem({
   };
 
   const Icon = getIcon();
-  const formattedSize = (document.size / 1024).toFixed(1) + ' KB';
+  //const formattedSize = (document.size / 1024).toFixed(1) + ' KB';
   const formattedDate = new Date(document.createdAt).toLocaleDateString();
 
   return (
@@ -50,7 +50,7 @@ export default function DocumentListItem({
         <div>
           <h4 className="font-medium text-text">{document.name}</h4>
           <p className="text-sm text-text-secondary">
-            {formattedSize} • {formattedDate}
+             {formattedDate}
           </p>
         </div>
       </div>

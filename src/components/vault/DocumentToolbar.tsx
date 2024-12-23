@@ -94,7 +94,8 @@ export default function DocumentToolbar({
         )}
 
         <div className="flex items-center gap-2 border-l border-border pl-4">
-          {['name', 'date', 'size', 'type'].map((field) => (
+          {/*{['name', 'date', 'size', 'type'].map((field) => (}*/}
+          {['name', 'date', 'type'].map((field) => (
             <button
               key={field}
               onClick={() => onSort(field as 'name' | 'date' | 'size' | 'type')}

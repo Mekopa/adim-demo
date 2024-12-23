@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Grid, List, Search } from 'lucide-react';
 import { Document } from '../../types/vault';
 import DocumentCard from './DocumentCard';
 import DocumentListItem from './DocumentListItem';

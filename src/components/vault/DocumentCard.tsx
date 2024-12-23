@@ -32,7 +32,7 @@ export default function DocumentCard({
   };
 
   const Icon = getIcon();
-  const formattedSize = (document.size / 1024).toFixed(1) + ' KB';
+  //const formattedSize = (document.size / 1024).toFixed(1) + ' KB';
   const formattedDate = new Date(document.createdAt).toLocaleDateString();
 
   return (
@@ -94,7 +94,8 @@ export default function DocumentCard({
           {document.name}
         </h4>
         <p className="text-sm text-text-secondary">
-          {formattedSize} • {formattedDate}
+          {/*{formattedSize} • {formattedDate}*/}
+         {formattedDate}
         </p>
       </div>
     </div>
