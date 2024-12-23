@@ -7,7 +7,7 @@ export interface User {
   export interface Document {
     id: string;
     name: string;
-    type: string;
+    file_type: string;
     size: number;
     createdAt: Date;
     modifiedAt?: Date;

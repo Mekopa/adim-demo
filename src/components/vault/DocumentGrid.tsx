@@ -44,7 +44,7 @@ export default function DocumentGrid({ documents, onDelete }: DocumentGridProps)
         case 'size':
           return direction * (a.size - b.size);
         case 'type':
-          return direction * a.type.localeCompare(b.type);
+          return direction * a.file_type.localeCompare(b.file_type);
         default:
           return 0;
       }

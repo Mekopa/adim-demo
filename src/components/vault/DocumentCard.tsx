@@ -19,8 +19,15 @@ export default function DocumentCard({
   onMove,
 }: DocumentCardProps) {
   const getIcon = () => {
-    if (document.type.startsWith('image/')) return Image;
-    if (document.type.includes('pdf')) return FileText;
+    if (!document.file_type) {
+      return File;
+    }
+    if (document.file_type.startsWith('application/pdf')) {
+      return FileText;
+    }
+    if (document.file_type.startsWith('image/')) {
+      return Image;
+    }
     return File;
   };
 

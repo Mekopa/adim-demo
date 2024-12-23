@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronLeft, Upload } from 'lucide-react';
-import { Collection, Document } from '../../types/vault';
+import { Document } from '../../types/vault';
 import DocumentGrid from './DocumentGrid';
 import UploadDocumentModal from './UploadDocumentModal';
 import { extractFileMetadata } from '../../utils/fileUtils';
 import { User } from '../../types/auth';
-import { getCollectionById } from '../../api/vaultService';
+import { getCollectionById, deleteDocument } from '../../api/vaultService';
+//import type { Collection, Document } from '../../api/vaultService';
+
+interface Collection {
+  id: number;
+  name: string;
+  description: string;
+  documents?: Document[];
+}
 
 interface CollectionViewProps {
   collection: Collection;
@@ -17,6 +25,35 @@ export default function CollectionView({ collection, onBack, currentUser }: Coll
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [localCollection, setLocalCollection] = useState<Collection | null>(null); // Added state
+
+    // Fetch collection and its documents
+    const fetchCollectionData = async (id: number) => {
+      try {
+        const { data } = await getCollectionById(id);
+        setLocalCollection(data);
+        setDocuments(data.documents || []);
+      } catch (error) {
+        console.error('Failed to fetch collection data:', error);
+      }
+    };
+
+    // Called after uploading or deleting a document
+  const onRefreshDocuments = () => {
+    if (collection.id) {
+      fetchCollectionData(collection.id);
+    }
+  };
+
+    // Delete a document by ID, then refresh the collection’s documents
+  const handleDeleteDocument = async (docId: number) => {
+    try {
+      await deleteDocument(docId);
+      onRefreshDocuments();
+    } catch (error) {
+      console.error('Failed to delete document:', error);
+    }
+  };
 
   const handleUpload = async (files: File[]) => {
     setIsLoading(true);
@@ -50,25 +87,13 @@ export default function CollectionView({ collection, onBack, currentUser }: Coll
     }
   };
 
-  const fetchCollectionData = async (id: number) => {
-    try {
-      // This call should return { id, name, documents: [...] }
-      const { data } = await getCollectionById(id);
-      setCollection(data);
-      setDocuments(data.documents || []);
-    } catch (error) {
-      console.error('Failed to fetch collection data:', error);
+  // On the first render or whenever collectionId changes, fetch the data
+  useEffect(() => {
+    if (collection.id) {
+      fetchCollectionData(collection.id);
     }
-  };
-
-  const handleDeleteDocument = async (id: number) => {
-    try {
-      await deleteDocument(id);
-      fetchCollectionData(collectionId);
-    } catch (error) {
-      console.error('Failed to delete document:', error);
-    }
-  };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collection.id])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -83,8 +108,8 @@ export default function CollectionView({ collection, onBack, currentUser }: Coll
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-xl font-semibold text-text">{collection.name}</h2>
-              <p className="text-sm text-text-secondary">{collection.description}</p>
+            <h2 className="text-xl font-semibold text-text">{localCollection?.name || collection.name}</h2>
+            <p className="text-sm text-text-secondary">{localCollection?.description || collection.description}</p>
             </div>
           </div>
           <button

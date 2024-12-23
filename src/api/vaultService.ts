@@ -37,13 +37,14 @@ export const uploadDocumentToCollection = async (
   }
 };
 
-export const fetchCollectionById = async (id: string): Promise<Collection> => {
-  const response = await axiosInstance.get(`/collections/${id}/`); // Adjust endpoint if necessary
-  return response.data;
+// 1. Fetch a single collection by ID, returns collection with documents
+export const getCollectionById = async (collectionId: number) => {
+  return axiosInstance.get<Collection>(`/collections/${collectionId}/`);
 };
 
-export const getCollectionById = (id: number) => {
-  return axiosInstance.get(`/api/collections/${id}/`);
+// 2. Delete a document by ID
+export const deleteDocument = async (documentId: number) => {
+  return axiosInstance.delete(`/documents/${documentId}/`);
 };
 
 // Collections
