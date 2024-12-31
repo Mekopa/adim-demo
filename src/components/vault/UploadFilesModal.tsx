@@ -1,26 +1,24 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { X, Upload, File } from 'lucide-react';
-import { Collection } from '../../types/vault';
+import { X, Upload } from 'lucide-react';
 
-interface UploadDocumentModalProps {
+interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpload: (files: File[]) => Promise<void>;
-  collection: Collection;
   isLoading: boolean;
 }
 
-export default function UploadDocumentModal({
+export default function UploadFilesModal({
   isOpen,
   onClose,
   onUpload,
-  collection,
-  isLoading,
-}: UploadDocumentModalProps) {
+  isLoading
+}: UploadFilesModalProps) {
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     await onUpload(acceptedFiles);
-  }, [onUpload]);
+    onClose();
+  }, [onUpload, onClose]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -29,6 +27,7 @@ export default function UploadDocumentModal({
       'text/plain': ['.txt'],
       'application/msword': ['.doc'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'image/*': ['.png', '.jpg', '.jpeg']
     },
     maxSize: 10485760, // 10MB
   });
@@ -39,12 +38,7 @@ export default function UploadDocumentModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 className="text-xl font-semibold text-text">Upload Documents</h2>
-            <p className="text-sm text-text-secondary mt-1">
-              to {collection.name}
-            </p>
-          </div>
+          <h2 className="text-xl font-semibold text-text">Upload Files</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-background rounded-full transition-colors"
@@ -65,7 +59,7 @@ export default function UploadDocumentModal({
               {isDragActive ? 'Drop files here' : 'Drag & drop files here, or click to select'}
             </p>
             <p className="text-sm text-text-secondary mt-2">
-              Supported formats: PDF, TXT, DOC, DOCX (Max 10MB)
+              Supported formats: PDF, TXT, DOC, DOCX, Images (Max 10MB)
             </p>
           </div>
 

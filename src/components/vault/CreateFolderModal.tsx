@@ -3,32 +3,33 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X } from 'lucide-react';
-import { CreateCollectionInput } from '../../types/vault';
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name is too long'),
-  description: z.string().max(200, 'Description is too long'),
+  description: z.string().max(200, 'Description is too long').optional(),
 });
 
-interface CreateCollectionModalProps {
+type CreateFolderInput = z.infer<typeof schema>;
+
+interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateCollectionInput) => Promise<void>;
+  onSubmit: (data: CreateFolderInput) => Promise<void>;
   isLoading: boolean;
 }
 
-export default function CreateCollectionModal({
+export default function CreateFolderModal({
   isOpen,
   onClose,
   onSubmit,
   isLoading,
-}: CreateCollectionModalProps) {
+}: CreateFolderModalProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<CreateCollectionInput>({
+  } = useForm<CreateFolderInput>({
     resolver: zodResolver(schema),
   });
 
@@ -43,7 +44,7 @@ export default function CreateCollectionModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-surface rounded-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-text">New Collection</h2>
+          <h2 className="text-xl font-semibold text-text">New Folder</h2>
           <button
             onClick={handleClose}
             className="p-2 hover:bg-background rounded-full transition-colors"
@@ -62,6 +63,7 @@ export default function CreateCollectionModal({
               type="text"
               id="name"
               className="w-full rounded-lg border-input-border bg-input p-2 text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Enter folder name"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-error">{errors.name.message}</p>
@@ -77,17 +79,18 @@ export default function CreateCollectionModal({
               id="description"
               rows={3}
               className="w-full rounded-lg border-input-border bg-input p-2 text-text focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Optional folder description"
             />
             {errors.description && (
               <p className="mt-1 text-sm text-error">{errors.description.message}</p>
             )}
           </div>
 
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-text-secondary hover:bg-background rounded-lg transition-colors mr-2"
+              className="px-4 py-2 text-text-secondary hover:bg-background rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -96,7 +99,7 @@ export default function CreateCollectionModal({
               disabled={isLoading}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Creating...' : 'Create Collection'}
+              {isLoading ? 'Creating...' : 'Create Folder'}
             </button>
           </div>
         </form>

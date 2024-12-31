@@ -1,158 +1,123 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Collection, CollectionGroup } from '../types/vault';
-import CollectionList from '../components/vault/CollectionList';
-import CollectionView from '../components/vault/CollectionView';
-import SearchBar from '../components/vault/SearchBar';
-import ViewToggle from '../components/vault/ViewToggle';
-import CreateCollectionModal from '../components/vault/CreateCollectionModal';
-import CreateGroupModal from '../components/vault/CreateGroupModal';
+import { useVaultStructure } from '../hooks/useVaultStructure';
+import VaultGrid from '../components/vault/VaultGrid';
+import TopNavigation from '../components/vault/TopNavigation';
+import BottomNavigation from '../components/vault/BottomNavigation';
+import ActionBar from '../components/vault/ActionBar';
+import CreateFolderModal from '../components/vault/CreateFolderModal';
+import UploadFilesModal from '../components/vault/UploadFilesModal';
+import { Folder, VaultFile } from '../types/vault';
 
 export default function VaultPage() {
-  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showShared, setShowShared] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [collections, setCollections] = useState<Collection[]>([]);
-  const [groups, setGroups] = useState<CollectionGroup[]>([]);
 
-  // Mock current user
-  const currentUser = {
-    id: '1',
-    email: 'user@example.com',
-    name: 'Current User'
-  };
+  const {
+    currentPath,
+    folders,
+    getCurrentFolder,
+    getChildFolders,
+    getFolderFiles,
+    navigateToFolder,
+    createFolder,
+    uploadFiles,
+    deleteFile,
+    moveItems
+  } = useVaultStructure();
 
-  const handleCreateCollection = async (data: { name: string; description?: string }) => {
+  const currentFolder = getCurrentFolder();
+  const childFolders = getChildFolders(currentFolder?.id || null);
+  const folderFiles = getFolderFiles(currentFolder?.id || null);
+
+  // Combine folders and files for the grid
+  const items = [...childFolders, ...folderFiles];
+
+  const handleCreateFolder = async (data: { name: string; description?: string }) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newCollection: Collection = {
-        id: Date.now().toString(),
-        name: data.name,
-        description: data.description || '',
-        createdAt: new Date(),
-        documentCount: 0,
-        owner: currentUser,
-        isPrivate: true
-      };
-
-      setCollections(prev => [...prev, newCollection]);
+      await createFolder(data);
       setShowCreateModal(false);
-    } catch (error) {
-      console.error('Failed to create collection:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleCreateGroup = async (data: { name: string; collectionIds: string[] }) => {
+  const handleUploadFiles = async (files: File[]) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const newGroup: CollectionGroup = {
-        id: Date.now().toString(),
-        name: data.name,
-        createdAt: new Date(),
-        owner: currentUser
-      };
-
-      setGroups(prev => [...prev, newGroup]);
-      
-      // Update collections with new groupId
-      setCollections(prev => prev.map(collection => 
-        data.collectionIds.includes(collection.id)
-          ? { ...collection, groupId: newGroup.id }
-          : collection
-      ));
-      
-      setShowCreateGroupModal(false);
-    } catch (error) {
-      console.error('Failed to create group:', error);
+      await uploadFiles(files);
+      setShowUploadModal(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMoveToGroup = (collectionId: string, groupId: string | null) => {
-    setCollections(prev => prev.map(collection => 
-      collection.id === collectionId
-        ? { ...collection, groupId }
-        : collection
-    ));
+  const handleItemSelect = (item: Folder | VaultFile) => {
+    if ('documentCount' in item) {
+      navigateToFolder(item.id);
+    }
   };
 
-  const filteredCollections = collections.filter(collection => {
-    const matchesSearch = collection.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesView = showShared 
-      ? collection.owner.id !== currentUser.id 
-      : collection.owner.id === currentUser.id;
-    return matchesSearch && matchesView;
-  });
+  const handleBack = () => {
+    navigateToFolder(currentFolder?.parentId || null);
+  };
 
-  if (selectedCollection) {
-    return (
-      <CollectionView
-        collection={selectedCollection}
-        onBack={() => setSelectedCollection(null)}
-      />
-    );
-  }
+  const handleDelete = (id: string) => {
+    deleteFile(id);
+  };
+
+  const handleMove = (itemIds: string[], targetFolderId: string) => {
+    moveItems(itemIds, currentFolder?.id || null, targetFolderId);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center">
-          <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          <ViewToggle value={showShared} onChange={setShowShared} />
+    <div className="flex pl-3 flex-col h-full">
+      <div className="flex-none">
+        <TopNavigation 
+          currentFolder={currentFolder}
+          onBack={handleBack}
+          onUpload={() => setShowUploadModal(true)}
+          onCreateFolder={() => setShowCreateModal(true)}
+        />
+        <ActionBar 
+          onUpload={() => setShowUploadModal(true)}
+          onCreateFolder={() => setShowCreateModal(true)}
+        />
+      </div>
+      
+      <div className="flex-1 overflow-auto">
+        <div className='p-3'>
+          <VaultGrid
+            items={items}
+            onSelect={handleItemSelect}
+            onDelete={handleDelete}
+            onMove={handleMove}
+          />
         </div>
-        {!showShared && (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowCreateGroupModal(true)}
-              className="px-4 py-2 text-text-secondary hover:text-text hover:bg-background rounded-lg transition-colors"
-            >
-              New Group
-            </button>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Collection</span>
-            </button>
-          </div>
+      </div>
+
+      <div className="flex-none">
+        {currentFolder && (
+          <BottomNavigation 
+            currentPath={currentPath.map(id => folders.find(f => f.id === id)!).filter(Boolean)}
+            onNavigate={navigateToFolder}
+          />
         )}
       </div>
 
-      <CollectionList
-        collections={filteredCollections}
-        groups={groups}
-        currentUser={currentUser}
-        onSelect={setSelectedCollection}
-        showSearch={searchQuery.length > 0}
-        onMoveToGroup={handleMoveToGroup}
-      />
-
-      <CreateCollectionModal
+      <CreateFolderModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateCollection}
+        onSubmit={handleCreateFolder}
         isLoading={isLoading}
       />
 
-      <CreateGroupModal
-        isOpen={showCreateGroupModal}
-        onClose={() => setShowCreateGroupModal(false)}
-        onSubmit={handleCreateGroup}
+      <UploadFilesModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onUpload={handleUploadFiles}
         isLoading={isLoading}
-        collections={collections}
       />
     </div>
   );

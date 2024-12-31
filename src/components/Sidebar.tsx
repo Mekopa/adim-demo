@@ -34,7 +34,7 @@ export default function Sidebar() {
   return (
     <>
       <div 
-        className="flex flex-col bg-surface rounded-r-2xl border-border transition-all duration-300 relative"
+        className="flex flex-col bg-surface h-full rounded-2xl border-border transition-all duration-300 relative"
         style={{ width: isExpanded ? '240px' : '70px' }}
       >
         <div className="flex items-center justify-between px-3 py-4 border-border">
