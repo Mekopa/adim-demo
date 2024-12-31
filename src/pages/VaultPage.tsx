@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useVaultStructure } from '../hooks/useVaultStructure';
 import VaultGrid from '../components/vault/VaultGrid';
 import TopNavigation from '../components/vault/TopNavigation';
@@ -7,6 +7,7 @@ import ActionBar from '../components/vault/ActionBar';
 import CreateFolderModal from '../components/vault/CreateFolderModal';
 import UploadFilesModal from '../components/vault/UploadFilesModal';
 import { Folder, VaultFile } from '../types/vault';
+import { getUniqueFileName, getUniqueFolderName, isNameTaken } from '../utils/nameUtils';
 
 export default function VaultPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -23,21 +24,20 @@ export default function VaultPage() {
     createFolder,
     uploadFiles,
     deleteFile,
-    moveItems
+    moveItems,
+    renameItem
   } = useVaultStructure();
 
   const currentFolder = getCurrentFolder();
   const childFolders = getChildFolders(currentFolder?.id || null);
   const folderFiles = getFolderFiles(currentFolder?.id || null);
-
-  // Combine folders and files for the grid
   const items = [...childFolders, ...folderFiles];
 
-  const handleCreateFolder = async (data: { name: string; description?: string }) => {
+  const handleCreateFolder = async () => {
     setIsLoading(true);
     try {
-      await createFolder(data);
-      setShowCreateModal(false);
+      const name = getUniqueFolderName(childFolders);
+      await createFolder({ name });
     } finally {
       setIsLoading(false);
     }
@@ -46,12 +46,23 @@ export default function VaultPage() {
   const handleUploadFiles = async (files: File[]) => {
     setIsLoading(true);
     try {
-      await uploadFiles(files);
+      const processedFiles = Array.from(files).map(file => {
+        const uniqueName = getUniqueFileName(file.name, folderFiles);
+        const renamedFile = new File([file], uniqueName, { type: file.type });
+        return renamedFile;
+      });
+      await uploadFiles(processedFiles);
       setShowUploadModal(false);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const validateItemName = useCallback((name: string) => {
+    if (!name.trim()) return 'Name cannot be empty';
+    if (isNameTaken(name, items)) return 'Name already exists';
+    return undefined;
+  }, [items]);
 
   const handleItemSelect = (item: Folder | VaultFile) => {
     if ('documentCount' in item) {
@@ -71,18 +82,22 @@ export default function VaultPage() {
     moveItems(itemIds, currentFolder?.id || null, targetFolderId);
   };
 
+  const handleRename = async (itemId: string, newName: string) => {
+    await renameItem(itemId, newName);
+  };
+
   return (
     <div className="flex pl-3 flex-col h-full">
       <div className="flex-none">
+        <ActionBar 
+          onUpload={() => setShowUploadModal(true)}
+          onCreateFolder={handleCreateFolder}
+        />
         <TopNavigation 
           currentFolder={currentFolder}
           onBack={handleBack}
           onUpload={() => setShowUploadModal(true)}
-          onCreateFolder={() => setShowCreateModal(true)}
-        />
-        <ActionBar 
-          onUpload={() => setShowUploadModal(true)}
-          onCreateFolder={() => setShowCreateModal(true)}
+          onCreateFolder={handleCreateFolder}
         />
       </div>
       
@@ -93,6 +108,8 @@ export default function VaultPage() {
             onSelect={handleItemSelect}
             onDelete={handleDelete}
             onMove={handleMove}
+            onRename={handleRename}
+            validateName={validateItemName}
           />
         </div>
       </div>

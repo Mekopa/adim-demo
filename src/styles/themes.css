@@ -7,6 +7,7 @@
 :root[data-theme="light"] {
   color-scheme: light;
   --color-primary: #2563eb;
+  --color-ineffective: #2564ebb2;
   --color-primary-hover: #1d4ed8;
   --color-secondary: #4b5563;
   --color-accent: #8b5cf6;
@@ -25,6 +26,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --color-primary: #3b82f6;
+  --color-ineffective: #2564ebb2;
   --color-primary-hover: #2563eb;
   --color-secondary: #9ca3af;
   --color-accent: #a78bfa;
@@ -43,6 +45,7 @@
 :root[data-theme="navy"] {
   color-scheme: dark;
   --color-primary: #3b82f6;
+  --color-ineffective: #2564ebb2;
   --color-primary-hover: #2563eb;
   --color-secondary: #9ca3af;
   --color-accent: #a78bfa;

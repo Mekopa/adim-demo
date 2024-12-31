@@ -16,7 +16,7 @@ export default function TopNavigation({
   onCreateFolder 
 }: TopNavigationProps) {
   return (
-    <div className="flex items-center justify-between h-16 px-4 text-text">
+    <div className="flex items-center justify-between h-10 px-4 text-text">
       <div className="flex items-center">
         {currentFolder && (
           <button

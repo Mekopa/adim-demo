@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { FileIcon } from './FileIcon';
-import { MoreVertical, Download, Trash2, Folder } from 'lucide-react';
+import { FileIcon, getFileIconColor } from './FileIcon';
+import { MoreVertical, Download, Trash2, Folder, Edit2 } from 'lucide-react';
 import { Menu } from '@headlessui/react';
 import { formatFileSize } from '../../utils/fileUtils';
 import { VaultFile, Folder as FolderType } from '../../types/vault';
+import RenameInput from './RenameInput';
 
 interface DraggableItemProps {
   item: VaultFile | FolderType;
   onSelect: (e: React.MouseEvent) => void;
   onDelete: () => void;
+  onRename: (newName: string) => void;
+  validateName?: (name: string) => string | undefined;
   isSelected: boolean;
   isFolder: boolean;
   isDragging?: boolean;
@@ -20,11 +23,15 @@ export default function DraggableItem({
   item,
   onSelect,
   onDelete,
+  onRename,
+  validateName,
   isSelected,
   isFolder,
   isDragging = false,
   isDropTarget = false
 }: DraggableItemProps) {
+  const [isRenaming, setIsRenaming] = useState(false);
+
   const { attributes, listeners, setNodeRef: setDraggableRef } = useDraggable({
     id: item.id,
     data: {
@@ -38,12 +45,16 @@ export default function DraggableItem({
     disabled: !isFolder
   });
 
-  // Combine refs for folders (both draggable and droppable)
   const setRef = (element: HTMLElement | null) => {
     setDraggableRef(element);
     if (isFolder) {
       setDroppableRef(element);
     }
+  };
+
+  const handleRename = (newName: string) => {
+    onRename(newName);
+    setIsRenaming(false);
   };
 
   return (
@@ -53,9 +64,9 @@ export default function DraggableItem({
       {...listeners}
       onClick={onSelect}
       className={`
-        group relative flex flex-col items-center p-4 rounded-lg transition-all duration-200 cursor-pointer w-[200px]
+        group relative flex flex-col items-center p-4 rounded-xl transition-all duration-200 cursor-pointer w-[180px]
         ${isDragging ? 'opacity-50' : 'opacity-100'}
-        ${isSelected ? 'ring-2 ring-blue-500 bg-[#2c2c2e]' : ' hover:bg-[#2c2c2e]'}
+        ${isSelected ? 'ring-2 ring-blue-500 bg-[#2c2c2e]' : 'hover:bg-[#2c2c2e]'}
         ${(isOver || isDropTarget) && isFolder ? 'ring-2 ring-blue-500 bg-[#3c3c3e]' : ''}
       `}
     >
@@ -65,6 +76,22 @@ export default function DraggableItem({
           <MoreVertical className="w-4 h-4" />
         </Menu.Button>
         <Menu.Items className="absolute right-0 mt-1 w-48 bg-[#2c2c2e] rounded-lg shadow-lg border border-[#3c3c3e] overflow-hidden z-10">
+          <Menu.Item>
+            {({ active }) => (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRenaming(true);
+                }}
+                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 ${
+                  active ? 'bg-[#3c3c3e]' : ''
+                }`}
+              >
+                <Edit2 className="w-4 h-4" />
+                <span>Rename</span>
+              </button>
+            )}
+          </Menu.Item>
           {'url' in item && (
             <Menu.Item>
               {({ active }) => (
@@ -108,28 +135,43 @@ export default function DraggableItem({
       </Menu>
 
       {/* Icon */}
-      <div className="p-14 mb-3 rounded-lg bg-[#2c2c2e] transition-colors">
+      <div className={`p-12 mb-3 rounded-xl transition-colors ${
+        isFolder 
+          ? 'bg-blue-500/10' 
+          : getFileIconColor('type' in item ? item.type : '').bgColor
+      }`}>
         {isFolder ? (
-          <Folder className="w-8 h-8 text-blue-400" />
+          <Folder className="w-12 h-12 text-blue-500" />
         ) : (
           <FileIcon 
             type={'type' in item ? item.type : ''} 
-            className="w-8 h-8 text-red-400" 
+            className="w-12 h-12" 
           />
         )}
       </div>
 
       {/* Name */}
       <div className="w-full text-center">
-        <h4 className="font-medium text-white truncate mb-1">{item.name}</h4>
-        {isFolder ? (
-          <p className="text-sm text-gray-400">
-            {(item as FolderType).documentCount} items
-          </p>
+        {isRenaming ? (
+          <RenameInput
+            initialName={item.name}
+            onRename={handleRename}
+            onCancel={() => setIsRenaming(false)}
+            validate={validateName}
+          />
         ) : (
-          <p className="text-sm text-gray-400">
-            {formatFileSize((item as VaultFile).size)}
-          </p>
+          <>
+            <h4 className="font-medium text-white truncate mb-1">{item.name}</h4>
+            {isFolder ? (
+              <p className="text-sm text-gray-400">
+                {(item as FolderType).documentCount} items
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400">
+                {formatFileSize((item as VaultFile).size)}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
