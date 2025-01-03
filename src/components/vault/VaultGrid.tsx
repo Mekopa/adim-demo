@@ -1,22 +1,46 @@
-import React, { useState, useRef } from 'react';
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, useSensor, useSensors, MouseSensor, TouchSensor } from '@dnd-kit/core';
+// VaultGrid.tsx
+import React, { useRef } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  useSensor,
+  useSensors,
+  MouseSensor,
+  TouchSensor
+} from '@dnd-kit/core';
 import { Folder, VaultFile } from '../../types/vault';
 import DraggableItem from './DraggableItem';
-import DragOverlay from './DragOverlay';
+import DragOverlayComponent from './DragOverlayComponent'; // Renamed to avoid conflict with DndKit's DragOverlay
 
 interface VaultGridProps {
   items: (Folder | VaultFile)[];
-  onSelect: (item: Folder | VaultFile) => void;
+  selectedItems: Set<string>;
+  onSelectionChange: (newSelection: Set<string>) => void;
+  onNavigateToFolder: (folderId: string) => void;
   onDelete: (id: string) => void;
   onMove: (itemIds: string[], targetFolderId: string) => void;
+  onRename: (id: string, newName: string) => void;
+  validateName: (name: string) => string | undefined;
 }
 
-export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGridProps) {
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
-  const [lastClickedId, setLastClickedId] = useState<string | null>(null);
-  const [lastClickTime, setLastClickTime] = useState<number>(0);
+export default function VaultGrid({
+  items,
+  selectedItems,
+  onSelectionChange,
+  onNavigateToFolder,
+  onDelete,
+  onMove,
+  onRename,
+  validateName
+}: VaultGridProps) {
+  const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [dragOverFolderId, setDragOverFolderId] = React.useState<string | null>(null);
+  const [lastClickedId, setLastClickedId] = React.useState<string | null>(null);
+  const [lastClickTime, setLastClickTime] = React.useState<number>(0);
+
+  // Store the index of the last item clicked for shift selections
   const lastRangeStartIndex = useRef<number>(-1);
 
   const mouseSensor = useSensor(MouseSensor, {
@@ -34,37 +58,53 @@ export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGr
 
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  const handleItemClick = (e: React.MouseEvent, item: Folder | VaultFile, index: number) => {
+  /**
+   * Helper: Update the selection by invoking the parent callback
+   */
+  const setSelection = (newSet: Set<string>) => {
+    onSelectionChange(newSet);
+  };
+
+  /**
+   * Handle item clicks for selection and navigation
+   */
+  const handleItemClick = (
+    e: React.MouseEvent,
+    item: Folder | VaultFile,
+    index: number
+  ) => {
     e.preventDefault();
+
     const now = Date.now();
-    const isDoubleClick = item.id === lastClickedId && now - lastClickTime < 500;
+    const isDoubleClick = item.id === lastClickedId && now - lastClickTime < 400;
 
     // Handle double-click for folders
     if (isDoubleClick && 'documentCount' in item) {
-      onSelect(item);
-      setSelectedItems(new Set());
+      onNavigateToFolder(item.id);
+      setSelection(new Set()); // Clear selection after navigating
+      setLastClickedId(null);
       return;
     }
 
-    // Update click tracking
+    // Update "last click" tracking for next possible double-click
     setLastClickedId(item.id);
     setLastClickTime(now);
 
-    // Handle selection
+    // Handle multi-selection logic
     if (e.shiftKey && lastRangeStartIndex.current >= 0) {
-      // Range selection
+      // SHIFT: Range selection
       const start = Math.min(lastRangeStartIndex.current, index);
       const end = Math.max(lastRangeStartIndex.current, index);
       const itemsInRange = items.slice(start, end + 1);
-      
-      setSelectedItems(prev => {
+
+      setSelection(prev => {
         const newSelection = new Set(prev);
         itemsInRange.forEach(rangeItem => newSelection.add(rangeItem.id));
         return newSelection;
       });
     } else if (e.ctrlKey || e.metaKey) {
-      // Toggle selection
-      setSelectedItems(prev => {
+      // CTRL/CMD: Toggle selection
+      setSelection(prev => {
         const newSelection = new Set(prev);
         if (newSelection.has(item.id)) {
           newSelection.delete(item.id);
@@ -75,25 +115,32 @@ export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGr
       });
       lastRangeStartIndex.current = index;
     } else {
-      // Single selection
-      setSelectedItems(new Set([item.id]));
+      // Single click: Select only this item
+      setSelection(new Set([item.id]));
       lastRangeStartIndex.current = index;
     }
   };
 
+  /**
+   * Handle drag start event
+   */
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     setActiveId(active.id as string);
 
+    // If the dragged item isn't in the current selection, select only that item
     if (!selectedItems.has(active.id as string)) {
-      setSelectedItems(new Set([active.id as string]));
+      setSelection(new Set([active.id as string]));
     }
   };
 
+  /**
+   * Handle drag over event to determine drop targets
+   */
   const handleDragOver = (event: DragOverEvent) => {
     const { over } = event;
     if (over) {
-      const overItem = items.find(item => item.id === over.id);
+      const overItem = items.find(itm => itm.id === over.id);
       if (overItem && 'documentCount' in overItem) {
         setDragOverFolderId(over.id as string);
       } else {
@@ -104,27 +151,31 @@ export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGr
     }
   };
 
+  /**
+   * Handle drag end event to perform move actions
+   */
   const handleDragEnd = (event: DragEndEvent) => {
     const { over } = event;
-    
+
     if (over) {
-      const overItem = items.find(item => item.id === over.id);
+      const overItem = items.find(itm => itm.id === over.id);
       if (overItem && 'documentCount' in overItem) {
+        // Move all selected items to the over folder
         const itemsToMove = Array.from(selectedItems.size > 0 ? selectedItems : new Set([activeId]));
         const validItemsToMove = itemsToMove.filter(id => id !== over.id);
-        
+
         if (validItemsToMove.length > 0) {
           onMove(validItemsToMove, over.id);
-          setSelectedItems(new Set());
+          setSelection(new Set()); // Clear selection after moving
         }
       }
     }
-    
+
     setActiveId(null);
     setDragOverFolderId(null);
   };
 
-  const activeItem = items.find(item => item.id === activeId);
+  const activeItem = items.find(itm => itm.id === activeId);
 
   return (
     <DndContext
@@ -133,16 +184,18 @@ export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGr
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] justify-items-start">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] justify-items-start gap-4">
         {items.map((item, index) => {
           const isFolder = 'documentCount' in item;
+          const isSelected = selectedItems.has(item.id);
+
           return (
             <DraggableItem
               key={item.id}
               item={item}
               onSelect={(e) => handleItemClick(e, item, index)}
               onDelete={() => onDelete(item.id)}
-              isSelected={selectedItems.has(item.id)}
+              isSelected={isSelected}
               isFolder={isFolder}
               isDragging={activeId === item.id}
               isDropTarget={dragOverFolderId === item.id}
@@ -151,7 +204,7 @@ export default function VaultGrid({ items, onSelect, onDelete, onMove }: VaultGr
         })}
       </div>
 
-      <DragOverlay
+      <DragOverlayComponent
         activeItem={activeItem || null}
         selectedCount={selectedItems.size}
       />

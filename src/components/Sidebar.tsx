@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-  FileText, 
-  Briefcase,
-  MessageSquare, 
+  Cloud,
+  BotMessageSquare,
+  //MessageSquare, 
   Settings, 
   LogOut,
   ChevronRight,
   ChevronLeft,
+  Workflow,
 } from 'lucide-react';
 
 import SettingsModal from './settings/SettingsModal';
@@ -15,9 +16,9 @@ import useAuth from '../contexts/useAuth';
 import Logo from './shared/icons/Logo';
 
 const navigation = [
-  { name: 'Workflows', href: '/workflows', icon: FileText },
-  { name: 'Vault', href: '/vault', icon: Briefcase },
-  { name: 'Assistant', href: '/assistant', icon: MessageSquare },
+  { name: 'Workflows', href: '/workflows', icon: Workflow },
+  { name: 'Cloud', href: '/vault', icon: Cloud },
+  { name: 'Assistant', href: '/assistant', icon: BotMessageSquare },
 ];
 
 export default function Sidebar() {
