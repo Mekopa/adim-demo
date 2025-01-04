@@ -9,7 +9,7 @@ interface BottomNavigationProps {
 
 export default function BottomNavigation({ currentPath, onNavigate }: BottomNavigationProps) {
   return (
-    <div className="flex-shrink-0 flex items-center h-12 px-4 text-text ">
+    <div className="flex-shrink-0 flex items-center h-20 px-4 text-text ">
       <nav className="flex items-center space-x-1 text-sm overflow-x-auto scrollbar-hide w-full">
         <button
           onClick={() => onNavigate(null)}
@@ -23,7 +23,7 @@ export default function BottomNavigation({ currentPath, onNavigate }: BottomNavi
             <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <button
               onClick={() => onNavigate(folder.id)}
-              className="px-2 py-1 rounded hover:bg-[#2c2c2e] transition-colors truncate max-w-[200px] flex-shrink-0"
+              className="px-2 text-base py-1 rounded hover:bg-[#2c2c2e] transition-colors truncate max-w-[200px] flex-shrink-0"
             >
               {folder.name}
             </button>

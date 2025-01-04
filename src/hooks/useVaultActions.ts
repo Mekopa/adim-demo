@@ -1,156 +1,119 @@
-import { useState } from 'react';
-import { useLocalStorage } from './useLocalStorage';
-import { Collection, VaultFile } from '../types/vault';
+// src/hooks/useVaultActions.ts
+
+import { Folder, VaultFile } from '../types/vault'; // Adjust the path as necessary
+import axiosInstance from '../api/axiosInstance'; // Ensure correct path
 import { useAuth } from '../contexts/AuthContext';
-import { extractFileMetadata } from '../utils/fileUtils';
+import { useState, useCallback } from 'react';
 
 export function useVaultActions() {
-  const { user } = useAuth();
-  const [folders, setFolders] = useLocalStorage<Collection[]>('vault_folders', []);
-  const [files, setFiles] = useLocalStorage<Record<string, VaultFile[]>>('vault_files', {});
-  const [isLoading, setIsLoading] = useState(false);
+  const { logout } = useAuth(); // Access logout to handle unauthorized errors
 
-  const handleCreateFolder = async (data: { name: string; description?: string }) => {
-    setIsLoading(true);
+  /**
+   * Helper for making authenticated requests using axiosInstance
+   */
+  const request = useCallback(async <T>(
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+    url: string,
+    data?: any,
+    config?: any
+  ): Promise<T> => {
     try {
-      const newFolder: Collection = {
-        id: Date.now().toString(),
-        name: data.name,
-        description: data.description || '',
-        createdAt: new Date(),
-        documentCount: 0,
-        owner: user!,
-        isPrivate: true
-      };
-
-      setFolders(prev => [...prev, newFolder]);
-      setFiles(prev => ({ ...prev, [newFolder.id]: [] }));
-      return newFolder;
-    } finally {
-      setIsLoading(false);
+      const response = await axiosInstance.request<T>({
+        method,
+        url,
+        data,
+        ...config,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.status === 401) {
+        // Unauthorized, possibly logout
+        logout();
+      }
+      throw error;
     }
-  };
+  }, [logout]);
 
-  const handleUploadFiles = async (uploadedFiles: File[], folderId?: string) => {
-    setIsLoading(true);
-    try {
-      const processedFiles = await Promise.all(
-        uploadedFiles.map(async (file) => {
-          const metadata = await extractFileMetadata(file);
-          return {
-            id: Date.now().toString() + Math.random().toString(36).substr(2),
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            createdAt: new Date(),
-            modifiedAt: new Date(),
-            status: 'ready' as const,
-            url: URL.createObjectURL(file),
-            metadata
-          };
-        })
-      );
+  // ----------------------------------------------------------------------------
+  // FOLDER ACTIONS
+  // ----------------------------------------------------------------------------
 
-      if (folderId) {
-        // Add files to specific folder
-        setFiles(prev => ({
-          ...prev,
-          [folderId]: [...(prev[folderId] || []), ...processedFiles]
-        }));
-        
-        // Update folder document count
-        setFolders(prev => 
-          prev.map(folder => 
-            folder.id === folderId
-              ? { ...folder, documentCount: (folder.documentCount || 0) + processedFiles.length }
-              : folder
-          )
-        );
-      } else {
-        // Store files without a folder
-        setFiles(prev => ({
-          ...prev,
-          unassigned: [...(prev.unassigned || []), ...processedFiles]
-        }));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // 1. List all folders for the authenticated user
+  const listFolders = useCallback(async (): Promise<Folder[]> => {
+    return await request<Folder[]>('GET', '/cloud/folders/');
+  }, [request]);
 
-  const handleDeleteFile = async (fileId: string, folderId: string) => {
-    setFiles(prev => ({
-      ...prev,
-      [folderId]: prev[folderId].filter(file => file.id !== fileId)
-    }));
-
-    // Update folder document count
-    setFolders(prev =>
-      prev.map(folder =>
-        folder.id === folderId
-          ? { ...folder, documentCount: Math.max(0, folder.documentCount - 1) }
-          : folder
-      )
-    );
-  };
-
-  const handleMoveToFolder = async (
-    fileId: string,
-    sourceFolderId: string | null,
-    targetFolderId: string | null
-  ) => {
-    setFiles(prev => {
-      const sourceFiles = sourceFolderId ? prev[sourceFolderId] : prev.unassigned || [];
-      const targetFiles = targetFolderId ? prev[targetFolderId] : prev.unassigned || [];
-      const fileToMove = sourceFiles.find(f => f.id === fileId);
-
-      if (!fileToMove) return prev;
-
-      const newState = { ...prev };
-      
-      // Remove from source
-      if (sourceFolderId) {
-        newState[sourceFolderId] = sourceFiles.filter(f => f.id !== fileId);
-      } else {
-        newState.unassigned = sourceFiles.filter(f => f.id !== fileId);
-      }
-
-      // Add to target
-      if (targetFolderId) {
-        newState[targetFolderId] = [...targetFiles, fileToMove];
-      } else {
-        newState.unassigned = [...targetFiles, fileToMove];
-      }
-
-      return newState;
+  // 2. Create a new folder
+  const createFolder = useCallback(async (data: { name: string; parentId?: string | null }): Promise<Folder> => {
+    console.log('createFolder function called with data:', data);
+    return await request<Folder>('POST', '/cloud/folders/', {
+      name: data.name,
+      parent: data.parentId ?? null,
     });
+  }, [request]);
 
-    // Update folder document counts
-    setFolders(prev =>
-      prev.map(folder => {
-        if (folder.id === sourceFolderId) {
-          return { ...folder, documentCount: Math.max(0, folder.documentCount - 1) };
-        }
-        if (folder.id === targetFolderId) {
-          return { ...folder, documentCount: folder.documentCount + 1 };
-        }
-        return folder;
-      })
-    );
-  };
+  // 3. Rename a folder
+  const renameFolder = useCallback(async (folderId: string, newName: string): Promise<void> => {
+    await request<void>('POST', `/cloud/folders/${folderId}/rename/`, { name: newName });
+  }, [request]);
 
-  const getFilesForFolder = (folderId: string) => {
-    return files[folderId] || [];
-  };
+  // 4. Move a folder
+  const moveFolder = useCallback(async (folderId: string, targetParentId: string | null): Promise<void> => {
+    await request<void>('POST', `/cloud/folders/${folderId}/move/`, { target_parent_id: targetParentId ?? null });
+  }, [request]);
 
+  // 5. Delete a folder
+  const deleteFolder = useCallback(async (folderId: string): Promise<void> => {
+    await request<void>('DELETE', `/cloud/folders/${folderId}/`);
+  }, [request]);
+
+  // ----------------------------------------------------------------------------
+  // FILE ACTIONS
+  // ----------------------------------------------------------------------------
+
+  // 1. List all files for the authenticated user
+  const listFiles = useCallback(async (): Promise<VaultFile[]> => {
+    return await request<VaultFile[]>('GET', '/cloud/files/');
+  }, [request]);
+
+  // 2. Upload one or more files (placeholder for future multi-file logic)
+  //    For now, we won't implement, as you only want to display items
+  const uploadFiles = useCallback(async (files: File[], folderId?: string | null): Promise<VaultFile[]> => {
+    // TODO (in the future): implement real multi-part form upload
+    return []; // Returning empty for now
+  }, []);
+
+  // 3. Rename a file
+  const renameFile = useCallback(async (fileId: string, newName: string): Promise<void> => {
+    await request<void>('POST', `/cloud/files/${fileId}/rename/`, { name: newName });
+  }, [request]);
+
+  // 4. Move a file
+  const moveFile = useCallback(async (fileId: string, targetFolderId: string | null): Promise<void> => {
+    await request<void>('POST', `/cloud/files/${fileId}/move/`, { target_folder_id: targetFolderId ?? null });
+  }, [request]);
+
+  // 5. Delete a file
+  const deleteFile = useCallback(async (fileId: string): Promise<void> => {
+    await request<void>('DELETE', `/cloud/files/${fileId}/`);
+  }, [request]);
+
+  // ----------------------------------------------------------------------------
+  // EXPORT
+  // ----------------------------------------------------------------------------
   return {
-    folders,
-    files,
-    isLoading,
-    handleCreateFolder,
-    handleUploadFiles,
-    handleDeleteFile,
-    handleMoveToFolder,
-    getFilesForFolder
+    // Folder actions
+    listFolders,
+    createFolder,
+    renameFolder,
+    moveFolder,
+    deleteFolder,
+
+    // File actions
+    listFiles,
+    uploadFiles,
+    renameFile,
+    moveFile,
+    deleteFile,
   };
 }

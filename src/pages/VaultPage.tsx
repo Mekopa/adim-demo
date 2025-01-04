@@ -5,7 +5,6 @@ import VaultGrid from '../components/vault/VaultGrid';
 import TopNavigation from '../components/vault/TopNavigation';
 import BottomNavigation from '../components/vault/BottomNavigation';
 import ActionBar from '../components/vault/ActionBar';
-import CreateFolderModal from '../components/vault/CreateFolderModal';
 import UploadFilesModal from '../components/vault/UploadFilesModal';
 import { Folder, VaultFile } from '../types/vault';
 import { getUniqueFileName, getUniqueFolderName, isNameTaken } from '../utils/nameUtils';
@@ -28,7 +27,7 @@ export default function VaultPage() {
     getChildFolders,
     getFolderFiles,
     navigateToFolder,
-    createFolder,
+    createFolderInCurrent,
     uploadFiles,
     deleteFile,
     moveItems,
@@ -45,9 +44,10 @@ export default function VaultPage() {
    */
   const handleCreateFolder = async () => {
     setIsLoading(true);
+    console.log('Create Folder button pressed');
     try {
       const name = getUniqueFolderName(childFolders);
-      await createFolder({ name });
+      await createFolderInCurrent(name);
     } finally {
       setIsLoading(false);
     }
@@ -187,13 +187,6 @@ export default function VaultPage() {
           />
         )}
       </div>
-
-      <CreateFolderModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateFolder}
-        isLoading={isLoading}
-      />
 
       <UploadFilesModal
         isOpen={showUploadModal}

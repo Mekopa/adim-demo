@@ -48,8 +48,6 @@ export default function ActionBar({
 
   // Determine selection type
   const noSelection = selectionCount === 0;
-  const singleSelection = selectionCount === 1;
-  const multipleSelection = selectionCount > 1;
 
   // Check if any selected item is a folder
   const containsFolder = selectedObjects.some(item => 'documentCount' in item);

@@ -26,7 +26,7 @@ export default function TopNavigation({
             <ChevronLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="ml-2 text-lg font-medium truncate">
+        <h1 className="ml-2 text-2xl font-medium truncate">
           {currentFolder ? currentFolder.name : 'My Files'}
         </h1>
       </div>

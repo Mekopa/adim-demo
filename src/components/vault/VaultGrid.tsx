@@ -1,4 +1,5 @@
-// VaultGrid.tsx
+// src/components/vault/VaultGrid.tsx
+
 import React, { useRef } from 'react';
 import {
   DndContext,
@@ -12,7 +13,7 @@ import {
 } from '@dnd-kit/core';
 import { Folder, VaultFile } from '../../types/vault';
 import DraggableItem from './DraggableItem';
-import DragOverlayComponent from './DragOverlayComponent'; // Renamed to avoid conflict with DndKit's DragOverlay
+import DragOverlayComponent from './DragOverlayComponent';
 
 interface VaultGridProps {
   items: (Folder | VaultFile)[];
@@ -48,14 +49,12 @@ export default function VaultGrid({
       distance: 10,
     },
   });
-
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
       delay: 200,
       tolerance: 5,
     },
   });
-
   const sensors = useSensors(mouseSensor, touchSensor);
 
   /**
@@ -64,6 +63,16 @@ export default function VaultGrid({
   const setSelection = (newSet: Set<string>) => {
     onSelectionChange(newSet);
   };
+
+  /**
+   * Determine if the item is a folder or a file based on real backend fields.
+   * - If 'parent' in item -> treat as Folder
+   * - Else if 'folder' in item -> treat as File
+   * Adjust this logic if your model fields differ.
+   */
+  function isFolderItem(item: Folder | VaultFile): boolean {
+    return 'parent' in item; // (Because folder objects have parent, file objects do not.)
+  }
 
   /**
    * Handle item clicks for selection and navigation
@@ -78,8 +87,8 @@ export default function VaultGrid({
     const now = Date.now();
     const isDoubleClick = item.id === lastClickedId && now - lastClickTime < 400;
 
-    // Handle double-click for folders
-    if (isDoubleClick && 'documentCount' in item) {
+    // Double-click logic: If it's a folder, navigate to it
+    if (isDoubleClick && isFolderItem(item)) {
       onNavigateToFolder(item.id);
       setSelection(new Set()); // Clear selection after navigating
       setLastClickedId(null);
@@ -90,20 +99,19 @@ export default function VaultGrid({
     setLastClickedId(item.id);
     setLastClickTime(now);
 
-    // Handle multi-selection logic
+    // SHIFT: Range selection
     if (e.shiftKey && lastRangeStartIndex.current >= 0) {
-      // SHIFT: Range selection
       const start = Math.min(lastRangeStartIndex.current, index);
       const end = Math.max(lastRangeStartIndex.current, index);
       const itemsInRange = items.slice(start, end + 1);
-
       setSelection(prev => {
         const newSelection = new Set(prev);
         itemsInRange.forEach(rangeItem => newSelection.add(rangeItem.id));
         return newSelection;
       });
-    } else if (e.ctrlKey || e.metaKey) {
-      // CTRL/CMD: Toggle selection
+    }
+    // CTRL/CMD: Toggle selection
+    else if (e.ctrlKey || e.metaKey) {
       setSelection(prev => {
         const newSelection = new Set(prev);
         if (newSelection.has(item.id)) {
@@ -114,8 +122,9 @@ export default function VaultGrid({
         return newSelection;
       });
       lastRangeStartIndex.current = index;
-    } else {
-      // Single click: Select only this item
+    }
+    // Single click: Select only this item
+    else {
       setSelection(new Set([item.id]));
       lastRangeStartIndex.current = index;
     }
@@ -141,7 +150,7 @@ export default function VaultGrid({
     const { over } = event;
     if (over) {
       const overItem = items.find(itm => itm.id === over.id);
-      if (overItem && 'documentCount' in overItem) {
+      if (overItem && isFolderItem(overItem)) {
         setDragOverFolderId(over.id as string);
       } else {
         setDragOverFolderId(null);
@@ -156,21 +165,19 @@ export default function VaultGrid({
    */
   const handleDragEnd = (event: DragEndEvent) => {
     const { over } = event;
-
     if (over) {
       const overItem = items.find(itm => itm.id === over.id);
-      if (overItem && 'documentCount' in overItem) {
+      if (overItem && isFolderItem(overItem)) {
         // Move all selected items to the over folder
         const itemsToMove = Array.from(selectedItems.size > 0 ? selectedItems : new Set([activeId]));
         const validItemsToMove = itemsToMove.filter(id => id !== over.id);
 
         if (validItemsToMove.length > 0) {
-          onMove(validItemsToMove, over.id);
+          onMove(validItemsToMove, over.id as string);
           setSelection(new Set()); // Clear selection after moving
         }
       }
     }
-
     setActiveId(null);
     setDragOverFolderId(null);
   };
@@ -184,14 +191,14 @@ export default function VaultGrid({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] justify-items-start gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] justify-items-start gap-4">
         {items.map((item, index) => {
-          const isFolder = 'documentCount' in item;
+          const isFolder = isFolderItem(item);
           const isSelected = selectedItems.has(item.id);
 
           return (
             <DraggableItem
-              key={item.id}
+              key={`${item.id}-${index}`}
               item={item}
               onSelect={(e) => handleItemClick(e, item, index)}
               onDelete={() => onDelete(item.id)}
