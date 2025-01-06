@@ -1,5 +1,5 @@
 {
-  "name": "legal-document-generator",
+  "name": "A.D.I.M",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -22,6 +22,7 @@
     "react-hook-form": "^7.51.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.28.0",
+    "reactflow": "^11.11.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {
