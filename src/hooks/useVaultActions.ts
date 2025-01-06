@@ -76,12 +76,21 @@ export function useVaultActions() {
     return await request<VaultFile[]>('GET', '/cloud/files/');
   }, [request]);
 
-  // 2. Upload one or more files (placeholder for future multi-file logic)
-  //    For now, we won't implement, as you only want to display items
-  const uploadFiles = useCallback(async (files: File[], folderId?: string | null): Promise<VaultFile[]> => {
-    // TODO (in the future): implement real multi-part form upload
-    return []; // Returning empty for now
-  }, []);
+  const uploadFiles = useCallback(async (files: File[], parentId?: string | null): Promise<VaultFile[]> => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    if (parentId) {
+      formData.append('folder', parentId);
+    }
+
+    return await request<VaultFile[]>('POST', '/cloud/files/bulk_upload/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }, [request]);
 
   // 3. Rename a file
   const renameFile = useCallback(async (fileId: string, newName: string): Promise<void> => {

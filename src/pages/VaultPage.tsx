@@ -5,13 +5,10 @@ import VaultGrid from '../components/vault/VaultGrid';
 import TopNavigation from '../components/vault/TopNavigation';
 import BottomNavigation from '../components/vault/BottomNavigation';
 import ActionBar from '../components/vault/ActionBar';
-import UploadFilesModal from '../components/vault/UploadFilesModal';
 import { Folder, VaultFile } from '../types/vault';
 import { getUniqueFileName, getUniqueFolderName, isNameTaken } from '../utils/nameUtils';
 
 export default function VaultPage() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   /**
@@ -28,8 +25,8 @@ export default function VaultPage() {
     getFolderFiles,
     navigateToFolder,
     createFolderInCurrent,
-    uploadFiles,
-    deleteFile,
+    uploadFilesToCurrent,
+    deleteFileById,
     moveItems,
     renameItem
   } = useVaultStructure();
@@ -56,7 +53,7 @@ export default function VaultPage() {
   /**
    * Handler to upload files
    */
-  const handleUploadFiles = async (files: File[]) => {
+  const handleUploadFilesDirectly = async (files: File[]) => {
     setIsLoading(true);
     try {
       const processedFiles = Array.from(files).map(file => {
@@ -64,8 +61,7 @@ export default function VaultPage() {
         const renamedFile = new File([file], uniqueName, { type: file.type });
         return renamedFile;
       });
-      await uploadFiles(processedFiles);
-      setShowUploadModal(false);
+      await uploadFilesToCurrent(processedFiles);
     } finally {
       setIsLoading(false);
     }
@@ -103,14 +99,14 @@ export default function VaultPage() {
    * Handler to delete an item
    */
   const handleDelete = useCallback((id: string) => {
-    deleteFile(id);
+    deleteFileById(id);
     // After deletion, remove the item from selection if it was selected
     setSelectedItems(prev => {
       const newSelection = new Set(prev);
       newSelection.delete(id);
       return newSelection;
     });
-  }, [deleteFile]);
+  }, [deleteFileById]);
 
   /**
    * Handler to move items to a target folder
@@ -140,7 +136,7 @@ export default function VaultPage() {
       <div className="flex-none">
         {/* ActionBar receives the entire items array and the current selection */}
         <ActionBar
-          onUpload={() => setShowUploadModal(true)}
+          onUpload={handleUploadFilesDirectly}
           onCreateFolder={handleCreateFolder}
           items={items}
           selectedItems={selectedItems}
@@ -188,12 +184,6 @@ export default function VaultPage() {
         )}
       </div>
 
-      <UploadFilesModal
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        onUpload={handleUploadFiles}
-        isLoading={isLoading}
-      />
     </div>
   );
 }

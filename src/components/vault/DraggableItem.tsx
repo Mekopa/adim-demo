@@ -138,13 +138,13 @@ export default function DraggableItem({
       <div className={`p-12 mb-3 rounded-xl transition-colors ${
         isFolder 
           ? 'bg-blue-500/10' 
-          : getFileIconColor('type' in item ? item.type : '').bgColor
+          :  getFileIconColor(item.file_type).bgColor
       }`}>
         {isFolder ? (
           <Folder className="w-12 h-12 text-blue-500" />
         ) : (
           <FileIcon 
-            type={'type' in item ? item.type : ''} 
+            type={item.file_type} 
             className="w-12 h-12" 
           />
         )}

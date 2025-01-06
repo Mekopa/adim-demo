@@ -1,5 +1,5 @@
 // ActionBar.tsx
-import React from 'react';
+import React, { useRef } from 'react';
 import {
   Grid,
   List,
@@ -14,7 +14,7 @@ import {
 import { VaultFile, Folder } from '../../types/vault';
 
 interface ActionBarProps {
-  onUpload: () => void;
+  onUpload: (files: File[]) => void;
   onCreateFolder: () => void;
   items: (Folder | VaultFile)[];
   selectedItems: Set<string>;
@@ -43,6 +43,20 @@ export default function ActionBar({
 
   // Filter out any null/undefined in case an ID didn't match
   const selectedObjects = selectedArray.filter(Boolean) as (Folder | VaultFile)[];
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      onUpload(Array.from(files));
+      event.target.value = '';
+    }
+  };
 
   const selectionCount = selectedObjects.length;
 
@@ -88,8 +102,16 @@ export default function ActionBar({
 
       {/* Center section */}
       <div className="flex items-center gap-1">
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileChange}
+          multiple
+          accept=".pdf,.txt,.doc,.docx,.png,.jpg,.jpeg"
+        />
         <button
-          onClick={onUpload}
+          onClick={handleUploadClick}
           aria-label="Upload"
           className="p-2 rounded-xl hover:bg-[#2c2c2e] transition-colors"
         >

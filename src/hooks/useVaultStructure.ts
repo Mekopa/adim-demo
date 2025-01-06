@@ -173,6 +173,27 @@ export function useVaultStructure() {
     // TODO: implement real logic
   }
 
+  /**
+   * Rename an item (folder or file).
+   */
+  async function renameItem(itemId: string, newName: string) {
+    const folder = folders.find(f => f.id === itemId);
+    if (folder) {
+      await renameFolder(itemId, newName);
+      setFolders(prevFolders =>
+        prevFolders.map(f => (f.id === itemId ? { ...f, name: newName } : f))
+      );
+    } else {
+      const file = files.find(f => f.id === itemId);
+      if (file) {
+        await renameFile(itemId, newName);
+        setFiles(prevFiles =>
+          prevFiles.map(f => (f.id === itemId ? { ...f, name: newName } : f))
+        );
+      }
+    }
+  }
+
   // -----------------------------------------
   // RETURN HOOK API
   // -----------------------------------------
@@ -195,6 +216,7 @@ export function useVaultStructure() {
     uploadFilesToCurrent,
     deleteFileById,
     moveItems,
+    renameItem,
 
     // Potential placeholders for rename or share
     // e.g. renameFolderInCurrent, etc.
