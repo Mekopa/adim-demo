@@ -30,7 +30,7 @@ export default function FormRenderer({ config, data = {}, onChange }: FormRender
     const currentStepData = steps[currentStep];
 
     return (
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-sm p-6">
+      <div className="max-w-2xl mx-auto rounded-lg shadow-sm p-6">
 
         <div className="space-y-6">
           {currentStepData.fields.map((field) => (

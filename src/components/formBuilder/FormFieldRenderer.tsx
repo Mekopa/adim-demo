@@ -20,7 +20,7 @@ export default function FormFieldRenderer({ field, value, onChange }: FormFieldR
             type="text"
             value={value || ''}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 text-text shadow-sm focus:border-blue-500 focus:ring-blue-500"
             placeholder={field.placeholder}
           />
         );
