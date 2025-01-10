@@ -16,6 +16,7 @@ import WorkflowsPageV2 from './pages/WorkflowPageV2';
 import FlowBuilderPage from './pages/FlowBuilderPage';
 import FormBuilderPage from './pages/FormBuilderPage';
 import CreateWorkflowPage from './pages/CreateWorkflowPage';
+import MailboxPage from './pages/MailboxPage';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
               <Route path="workflowV2" element={<WorkflowsPageV2 />} /> {/* Path: "/workflowV2" */}
               <Route path="vault" element={<VaultPage />} /> {/* Path: "/vault" */}
               <Route path="assistant" element={<AssistantPage />} /> {/* Path: "/assistant" */}
+              <Route path="mail" element={<MailboxPage />} />
             </Route>
 
               <Route path="workflowV2'" element={<WorkflowsPageV2 />} /> {/* Path: "/workflowV2" */}

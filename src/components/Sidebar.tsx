@@ -3,7 +3,8 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   Cloud,
   BotMessageSquare,
-  //MessageSquare, 
+  //MessageSquare,
+  Mail, 
   Settings, 
   LogOut,
   ChevronRight,
@@ -18,6 +19,7 @@ import Logo from './shared/icons/Logo';
 const navigation = [
   { name: 'Workflows', href: '/workflows', icon: Workflow },
   { name: 'Cloud', href: '/vault', icon: Cloud },
+  { name: 'Mail', href: '/mail', icon: Mail },
   { name: 'Assistant', href: '/assistant', icon: BotMessageSquare },
 ];
 
