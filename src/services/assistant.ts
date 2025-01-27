@@ -6,12 +6,20 @@ export interface AssistantMessage {
   sender: 'AI';
 }
 
+// Create an axios instance with base URL
+const apiClient = axios.create({
+  baseURL: 'http://127.0.0.1:8000', // Backend server URL
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
 export const sendChatMessage = async (
   userMessage: string,
   sessionId?: string | null,
 ): Promise<AssistantMessage> => {
   try {
-    const response = await axios.post<AssistantMessage>('/assistant/chat/', {
+    const response = await apiClient.post<AssistantMessage>('/assistant/chat/', {
       user_message: userMessage,
       session_id: sessionId,
       input_type: 'chat',
