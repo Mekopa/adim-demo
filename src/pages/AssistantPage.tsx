@@ -44,7 +44,7 @@ export default function AssistantPage() {
     try {
       const response = await sendChatMessage(query, sessionId);
       const assistantMessage: ChatMessageType = {
-        id: crypto.randomUUID(),
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
         content: response.response_message,
         timestamp: new Date(),
@@ -55,7 +55,7 @@ export default function AssistantPage() {
       saveSession(response.session_id, [userMessage, assistantMessage]);
     } catch (error) {
       const errorMessage: ChatMessageType = {
-        id: crypto.randomUUID(),
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
         content: error instanceof Error ? error.message : 'An unexpected error occurred',
         timestamp: new Date(),
@@ -83,7 +83,7 @@ export default function AssistantPage() {
     try {
       const response = await sendChatMessage(message, sessionId);
       const assistantMessage: ChatMessageType = {
-        id: crypto.randomUUID(),
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
         content: response.response_message,
         timestamp: new Date(),
@@ -94,7 +94,7 @@ export default function AssistantPage() {
       saveSession(response.session_id, [...messages, userMessage, assistantMessage]);
     } catch (error) {
       const errorMessage: ChatMessageType = {
-        id: crypto.randomUUID(),
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
         content: error instanceof Error ? error.message : 'An unexpected error occurred',
         timestamp: new Date(),
