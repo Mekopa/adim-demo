@@ -1,65 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ChatInput from '../components/chat/ChatInput';
 import EmptyState from '../components/chat/EmptyState';
 import ChatMessage from '../components/chat/ChatMessage';
 import { ChatMessage as ChatMessageType, UploadedFile } from '../types';
+import { sendChatMessage } from '../services/assistant';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AssistantPage() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleStartChat = async (query: string, files: UploadedFile[], customer?: string) => {
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const { token } = useAuth();
+
+  useEffect(() => {
+    const savedSession = localStorage.getItem('assistantSession');
+    if (savedSession) {
+      const { sessionId, messages } = JSON.parse(savedSession);
+      setSessionId(sessionId);
+      setMessages(messages);
+    }
+  }, []);
+
+  const saveSession = (sessionId: string, messages: ChatMessageType[]) => {
+    localStorage.setItem('assistantSession', JSON.stringify({
+      sessionId,
+      messages
+    }));
+  };
+
+  const handleStartChat = async (query: string, files: UploadedFile[]) => {
     setLoading(true);
-    const initialMessage: ChatMessageType = {
+    const userMessage: ChatMessageType = {
       id: Date.now().toString(),
       type: 'user',
       content: query,
       timestamp: new Date(),
       files,
-      customer
     };
 
-    setMessages([initialMessage]);
+    setMessages([userMessage]);
 
-    // Simulate API response delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await sendChatMessage(query, sessionId);
+      const assistantMessage: ChatMessageType = {
+        id: crypto.randomUUID(),
+        type: 'assistant',
+        content: response.response_message,
+        timestamp: new Date(),
+      };
 
-    const assistantMessage: ChatMessageType = {
-      id: (Date.now() + 1).toString(),
-      type: 'assistant',
-      content: "I will help you analyze those documents. What specific information are you looking for?",
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, assistantMessage]);
-    setLoading(false);
+      setSessionId(response.session_id);
+      setMessages([userMessage, assistantMessage]);
+      saveSession(response.session_id, [userMessage, assistantMessage]);
+    } catch (error) {
+      const errorMessage: ChatMessageType = {
+        id: crypto.randomUUID(),
+        type: 'assistant',
+        content: error instanceof Error ? error.message : 'An unexpected error occurred',
+        timestamp: new Date(),
+        isError: true,
+      };
+      setMessages([userMessage, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSend = async (message: string) => {
     if (!message.trim()) return;
 
     setLoading(true);
-    const newMessage: ChatMessageType = {
+    const userMessage: ChatMessageType = {
       id: Date.now().toString(),
       type: 'user',
       content: message,
-      timestamp: new Date()
+      timestamp: new Date(),
+      files,
+      customer
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
 
-    // Simulate API response delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await sendChatMessage(message, sessionId);
+      const assistantMessage: ChatMessageType = {
+        id: crypto.randomUUID(),
+        type: 'assistant',
+        content: response.response_message,
+        timestamp: new Date(),
+      };
 
-    const assistantMessage: ChatMessageType = {
-      id: (Date.now() + 1).toString(),
-      type: 'assistant',
-      content: "I am analyzing your request. How else can I help you?",
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, assistantMessage]);
-    setLoading(false);
+      setSessionId(response.session_id);
+      setMessages(prev => [...prev, assistantMessage]);
+      saveSession(response.session_id, [...messages, userMessage, assistantMessage]);
+    } catch (error) {
+      const errorMessage: ChatMessageType = {
+        id: crypto.randomUUID(),
+        type: 'assistant',
+        content: error instanceof Error ? error.message : 'An unexpected error occurred',
+        timestamp: new Date(),
+        isError: true,
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
