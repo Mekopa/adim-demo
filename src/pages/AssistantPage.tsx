@@ -76,8 +76,6 @@ export default function AssistantPage() {
       type: 'user',
       content: message,
       timestamp: new Date(),
-      files,
-      customer
     };
 
     setMessages(prev => [...prev, userMessage]);
