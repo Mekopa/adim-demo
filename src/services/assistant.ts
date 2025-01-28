@@ -17,16 +17,17 @@ export const sendChatMessage = async (
   sessionId?: string | null,
 ): Promise<AssistantMessage> => {
   try {
-    const response = await apiClient.post<AssistantMessage>('/assistant/chat/', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-      },
-      user_message: userMessage,
-      session_id: sessionId,
-      input_type: 'chat',
-      output_type: 'chat',
-      tweaks: {},
-    });
+    const response = await apiClient.post<AssistantMessage>('http://127.0.0.1:8000/assistant/chat/', {                                                                                                                                                        
+      user_message: userMessage,                                                                                                                                                                                                                              
+      session_id: sessionId,                                                                                                                                                                                                                                  
+      input_type: 'chat',                                                                                                                                                                                                                                     
+      output_type: 'chat',                                                                                                                                                                                                                                    
+      tweaks: {},                                                                                                                                                                                                                                             
+    }, {                                                                                                                                                                                                                                                      
+      headers: {                                                                                                                                                                                                                                              
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`                                                                                                                                                                                        
+      }                                                                                                                                                                                                                                                       
+    });  
 
     return response.data;
   } catch (error) {
