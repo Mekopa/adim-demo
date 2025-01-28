@@ -28,7 +28,7 @@ export const sendChatMessage = async (
       payload.session_id = sessionId;
     }
 
-    const response = await apiClient.post<AssistantMessage>('/assistant/chat/', payload);
+    const response = await apiClient.post<AssistantMessage>('http://127.0.0.1:8000/assistant/chat/', payload);
 
     return response.data;
   } catch (error) {
