@@ -11,7 +11,6 @@ import axiosInstance from '../api/axiosInstance';
 
 // Configure with environment variable
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_LOCAL,
   headers: {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${localStorage.getItem('accessToken')}`
@@ -23,7 +22,7 @@ export const sendChatMessage = async (
   sessionId?: string | null,
 ): Promise<AssistantMessage> => {
   try {
-    const response = await apiClient.post<AssistantMessage>('/assistant/chat/', {
+    const response = await apiClient.post<AssistantMessage>('http://127.0.0.1:8000/assistant/chat/', {
       user_message: userMessage,
       session_id: sessionId,
       input_type: 'chat',
