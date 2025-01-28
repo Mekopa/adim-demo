@@ -6,13 +6,11 @@ export interface AssistantMessage {
   sender: 'AI';
 }
 
-// Create an axios instance with base URL
-const apiClient = axios.create({
-  baseURL: 'http://127.0.0.1:8000', // Backend server URL
-  headers: {
-    'Content-Type': 'application/json',
-  }
-});
+// Use the configured axios instance that handles auth headers
+import axiosInstance from '../api/axiosInstance';
+
+// Add API-specific configuration
+const apiClient = axiosInstance;
 
 export const sendChatMessage = async (
   userMessage: string,
@@ -20,6 +18,9 @@ export const sendChatMessage = async (
 ): Promise<AssistantMessage> => {
   try {
     const response = await apiClient.post<AssistantMessage>('/assistant/chat/', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      },
       user_message: userMessage,
       session_id: sessionId,
       input_type: 'chat',
