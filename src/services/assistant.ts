@@ -10,25 +10,25 @@ export interface AssistantMessage {
 import axiosInstance from '../api/axiosInstance';
 
 // Configure with environment variable
-const apiClient = axios.create({
-  headers: {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-  }
-});
+const apiClient = axiosInstance;
 
 export const sendChatMessage = async (
   userMessage: string,
   sessionId?: string | null,
 ): Promise<AssistantMessage> => {
   try {
-    const response = await apiClient.post<AssistantMessage>('http://127.0.0.1:8000/assistant/chat/', {
+    const payload: any = {
       user_message: userMessage,
-      session_id: sessionId,
       input_type: 'chat',
       output_type: 'chat',
       tweaks: {}
-    });
+    };
+
+    if (sessionId) {
+      payload.session_id = sessionId;
+    }
+
+    const response = await apiClient.post<AssistantMessage>('/assistant/chat/', payload);
 
     return response.data;
   } catch (error) {
