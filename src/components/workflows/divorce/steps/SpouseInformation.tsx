@@ -9,12 +9,12 @@ export default function SpouseInformation() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium text-text">Spouse Information</h2>
+      <h2 className="text-lg font-medium text-text">Sutuoktinių informacija</h2>
       
       <div className="space-y-4">
         <div>
           <label htmlFor="spouse1Name" className="block text-sm font-medium text-text-secondary">
-            Spouse 1 Name <span className="text-error">*</span>
+            Sutuoktinio 1 Vardas <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -29,7 +29,7 @@ export default function SpouseInformation() {
 
         <div>
           <label htmlFor="spouse2Name" className="block text-sm font-medium text-text-secondary">
-            Spouse 2 Name <span className="text-error">*</span>
+            Sutuoktinio 2 Vardas <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -44,7 +44,7 @@ export default function SpouseInformation() {
 
         <div>
           <label className="block text-sm font-medium text-text-secondary mb-2">
-            Client <span className="text-error">*</span>
+            Klientas <span className="text-error">*</span>
           </label>
           <div className="space-y-2">
             <label className="flex items-center gap-2">
@@ -54,7 +54,7 @@ export default function SpouseInformation() {
                 {...register('clientName')}
                 className="text-primary focus:ring-primary"
               />
-              <span className="text-text">{spouse1Name || 'Spouse 1'}</span>
+              <span className="text-text">{spouse1Name || 'Sutuoktinis 1'}</span>
             </label>
             <label className="flex items-center gap-2">
               <input
@@ -63,7 +63,7 @@ export default function SpouseInformation() {
                 {...register('clientName')}
                 className="text-primary focus:ring-primary"
               />
-              <span className="text-text">{spouse2Name || 'Spouse 2'}</span>
+              <span className="text-text">{spouse2Name || 'Sutuoktinis 2'}</span>
             </label>
           </div>
           {errors.clientName && (

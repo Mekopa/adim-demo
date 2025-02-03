@@ -12,14 +12,14 @@ export default function WorkInformation() {
       <div className="space-y-4">
         <div>
           <label htmlFor="spouse1WorkInfo" className="block text-sm font-medium text-text-secondary">
-            Spouse 1 Work Information
+            Sutuoktinio 1 Darbo informacija
           </label>
           <textarea
             id="spouse1WorkInfo"
             {...register('spouse1WorkInfo')}
             rows={4}
             className="mt-1 block w-full rounded-md text-text p-2 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Employment details, income, etc..."
+            placeholder="Pareigos, darbo valandos, atlyginimas ir t.t. ..."
           />
           {errors.spouse1WorkInfo && (
             <p className="mt-1 text-sm text-red-600">{errors.spouse1WorkInfo.message}</p>
@@ -28,14 +28,14 @@ export default function WorkInformation() {
 
         <div>
           <label htmlFor="spouse2WorkInfo" className="block text-sm font-medium text-text-secondary">
-            Spouse 2 Work Information
+          Sutuoktinio 2 Darbo informacija
           </label>
           <textarea
             id="spouse2WorkInfo"
             {...register('spouse2WorkInfo')}
             rows={4}
             className="mt-1 block p-2 w-full rounded-md border-border text-text shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            placeholder="Employment details, income, etc..."
+            placeholder="Pareigos, darbo valandos, atlyginimas ir t.t. ..."
           />
           {errors.spouse2WorkInfo && (
             <p className="mt-1 text-sm text-red-600">{errors.spouse2WorkInfo.message}</p>

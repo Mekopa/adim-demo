@@ -33,8 +33,8 @@ export async function generateDivorceDocument(data: DivorceFormData): Promise<st
   } catch (error) {
     console.error('Error generating document:', error);
     if (error instanceof Error) {
-      throw new Error(`Failed to generate document: ${error.message}`);
+      throw new Error(`Nepavyko sukurti dokumento${error.message}`);
     }
-    throw new Error('Failed to generate document');
+    throw new Error('Nepavyko sukurti dokumento');
   }
 }

@@ -7,8 +7,8 @@ interface SettingsTabsProps {
 }
 
 const tabs = [
-  { id: 'system', label: 'System', icon: Settings },
-  { id: 'account', label: 'Account', icon: User },
+  { id: 'system', label: 'Sistemos', icon: Settings },
+//  { id: 'account', label: 'Account', icon: User },
 ] as const;
 
 export default function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {

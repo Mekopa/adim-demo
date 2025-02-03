@@ -46,7 +46,7 @@ export default function AddAssetModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-surface rounded-xl max-w-md w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-text">Add Asset</h2>
+          <h2 className="text-xl font-semibold text-text">Pridėti turtą</h2>
           <button
             type="button"
             onClick={onClose}
@@ -59,14 +59,14 @@ export default function AddAssetModal({
         <div className="p-6 space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-text-secondary mb-1">
-              Asset Name
+              Turtas
             </label>
             <input
               type="text"
               id="name"
               {...register('name')}
               className="w-full rounded-lg border-input-border bg-input p-2 text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="e.g., House, Car, Bank Account"
+              placeholder="Pvz.: namas, sodas, santaupos..."
             />
             {errors.name && (
               <p className="mt-1 text-sm text-error">{errors.name.message}</p>
@@ -75,7 +75,7 @@ export default function AddAssetModal({
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Desired Owner
+              Kas nori turto?
             </label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
@@ -112,7 +112,7 @@ export default function AddAssetModal({
                 {...register('reason')}
                 rows={3}
                 className="w-full rounded-lg border-input-border bg-input p-2 text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Explain why this spouse should receive this asset..."
+                placeholder=" Paaiškinkite kodėl sutuoktinis pageidauja šio turto..."
               />
             </div>
           )}
@@ -130,7 +130,7 @@ export default function AddAssetModal({
               onClick={handleSubmit(onAdd)}
               className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
             >
-              Add Asset
+              Pridėti turtą
             </button>
           </div>
         </div>

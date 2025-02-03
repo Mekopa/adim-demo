@@ -7,14 +7,14 @@ import TemplateWorkflowModal from '../components/workflows/template/TemplateWork
 const workflows = [
   {
     id: 'divorce',
-    title: 'Divorce Document Drafter',
-    description: 'Generate a comprehensive divorce document with all necessary legal provisions',
+    title: 'Skyrybų iesškinio magistralė',
+    description: 'Sukurkime išsamų skyrybų ieškinį pagal visas būtinas teisines nuostatas.',
     icon: FileText,
   },
   {
     id: 'template',
-    title: 'Template Workflow',
-    description: 'A template workflow that can be modified for different use cases',
+    title: 'Magistralių kūrimo įrankis',
+    description: 'Susikurkite magistralė pagal savo poreikius',
     icon: FileCheck,
   },
 ];

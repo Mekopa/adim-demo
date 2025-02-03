@@ -4,29 +4,29 @@ import { FileText, Briefcase, Users, MessageSquare } from 'lucide-react';
 
 const sections = [
   {
-    name: 'Workflows',
-    description: 'Create and manage legal document workflows',
+    name: 'Dokumentų Valdymo Magistralė',
+    description: 'Kurkite ir tobulinkite pažangias teisinių dokumentų valdymo magistrales',
     icon: FileText,
     href: '/workflows',
     color: 'blue'
   },
   {
-    name: 'Document Vault',
-    description: 'Securely store and organize your documents',
+    name: 'Skaitmeninis dokumentų seifas',
+    description: 'Saugus, šifruotas ir patogus būdas tvarkyti bei saugoti svarbiausius dokumentus vienoje vietoje.',
     icon: Briefcase,
     href: '/vault',
     color: 'green'
   },
   {
-    name: 'Customers',
-    description: 'Manage your client relationships',
+    name: 'Klientų valdymo sistema',
+    description: 'Efektyviai valdydami duomenis, stiprinkite klientų pasitikėjimą.',
     icon: Users,
     href: '/customers',
     color: 'purple'
   },
   {
-    name: 'AI Assistant',
-    description: 'Get instant answers from your documents',
+    name: 'Dirbtinio intelekto asistentas',
+    description: 'Jūsų dokumentų analizė per sekundes.',
     icon: MessageSquare,
     href: '/assistant',
     color: 'orange'
@@ -46,8 +46,8 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen min-w-screen">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome to LegalFlow</h1>
-        <p className="text-gray-400 mb-12">Your legal document management solution</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Sveiki Mikai aš esu A.D.I.M. </h1>
+        <p className="text-gray-400 mb-12">Patikima ir išmani teisinių dokumentų valdymo sistema</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sections.map((section) => {

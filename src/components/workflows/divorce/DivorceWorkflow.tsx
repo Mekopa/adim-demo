@@ -18,11 +18,11 @@ interface DivorceWorkflowProps {
 }
 
 const steps = [
-  { id: 'spouse', title: 'Spouse Information', component: SpouseInformation },
-  { id: 'children', title: 'Children Information', component: ChildrenInformation },
-  { id: 'assets', title: 'Asset Information', component: AssetInformation },
-  { id: 'work', title: 'Work Information', component: WorkInformation },
-  { id: 'review', title: 'Review', component: ReviewInformation },
+  { id: 'spouse', title: 'sutuoktinių informacija', component: SpouseInformation },
+  { id: 'children', title: 'Inforacija apie vaikus', component: ChildrenInformation },
+  { id: 'assets', title: 'turto ir skolų informacija', component: AssetInformation },
+  { id: 'work', title: 'Darbo informacija', component: WorkInformation },
+  { id: 'review', title: 'Peržvalga', component: ReviewInformation },
 ];
 
 export default function DivorceWorkflow({ onComplete }: DivorceWorkflowProps) {
@@ -110,7 +110,7 @@ export default function DivorceWorkflow({ onComplete }: DivorceWorkflowProps) {
                 className="px-4 py-2 text-sm font-medium text-text-secondary hover:bg-background rounded-lg transition-colors"
                 disabled={currentStep === 0}
               >
-                Previous
+                Praeitas
               </button>
               
               {isLastStep ? (
@@ -118,7 +118,7 @@ export default function DivorceWorkflow({ onComplete }: DivorceWorkflowProps) {
                   type="submit"
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Generate Document
+                  Sukurti dokumentą
                 </button>
               ) : (
                 <button
@@ -126,7 +126,7 @@ export default function DivorceWorkflow({ onComplete }: DivorceWorkflowProps) {
                   onClick={handleNext}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
                 >
-                  Next
+                  Sekantis
                 </button>
               )}
             </div>

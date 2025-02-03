@@ -33,7 +33,7 @@ export default function AccountSettings({ isSaving, onSave }: AccountSettingsPro
   return (
     <form onSubmit={handleSubmit(onSave)} className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Change Password</h3>
+        <h3 className="text-lg font-medium">Pakeiskite slaptažodį</h3>
         <div>
           <label htmlFor="currentPassword" className="block text-sm font-medium text-text-secondary">
             Current Password

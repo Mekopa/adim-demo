@@ -17,10 +17,10 @@ import useAuth from '../contexts/useAuth';
 import Logo from './shared/icons/Logo';
 
 const navigation = [
-  { name: 'Workflows', href: '/workflows', icon: Workflow },
-  { name: 'Cloud', href: '/vault', icon: Cloud },
-  { name: 'Mail', href: '/mail', icon: Mail },
-  { name: 'Assistant', href: '/assistant', icon: BotMessageSquare },
+  { name: 'Dokumentų valdymo magistralė', href: '/workflows', icon: Workflow },
+  { name: 'Skaitmeninis dukumentų seifas', href: '/vault', icon: Cloud },
+  { name: 'Paštas', href: '/mail', icon: Mail },
+  { name: 'Dirbtinio intelekto asistentas', href: '/assistant', icon: BotMessageSquare },
 ];
 
 export default function Sidebar() {
@@ -107,10 +107,10 @@ export default function Sidebar() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-background transition-colors relative group"
           >
             <Settings className="w-6 h-6 flex-shrink-0" />
-            {isExpanded && <span>Settings</span>}
+            {isExpanded && <span>Nustatymai</span>}
             {!isExpanded && (
               <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border text-text text-sm rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
-                Settings
+                Nustatymai
               </div>
             )}
           </button>
@@ -119,10 +119,10 @@ export default function Sidebar() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary hover:bg-background transition-colors relative group"
           >
             <LogOut className="w-6 h-6 flex-shrink-0" />
-            {isExpanded && <span>Logout</span>}
+            {isExpanded && <span>Atsijungti</span>}
             {!isExpanded && (
               <div className="absolute left-full ml-2 px-2 py-1 bg-surface border border-border text-text text-sm rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-50">
-                Logout
+                Atsijungti
               </div>
             )}
           </button>

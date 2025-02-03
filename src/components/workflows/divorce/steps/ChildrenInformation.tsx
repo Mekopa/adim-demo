@@ -29,7 +29,7 @@ export default function ChildrenInformation() {
             className="rounded border-input-border text-primary focus:ring-primary"
           />
           <label htmlFor="hasChildren" className="text-sm font-medium text-text">
-            Do you have children?
+            Ar jie turi vaikų?
           </label>
         </div>
 
@@ -66,7 +66,7 @@ export default function ChildrenInformation() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Add Child
+                Pridėti vaiką
               </button>
             </div>
           </div>

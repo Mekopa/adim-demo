@@ -18,22 +18,22 @@ export default function ReviewInformation() {
   const sections = [
     {
       id: 'spouse',
-      title: 'Spouse Information',
+      title: 'Sutuoktiniių informacija',
       fields: [
-        { id: 'spouse1Name', label: 'Spouse 1 Name', value: formData.spouse1Name },
-        { id: 'spouse2Name', label: 'Spouse 2 Name', value: formData.spouse2Name },
+        { id: 'spouse1Name', label: 'Sutuoktinis 1', value: formData.spouse1Name },
+        { id: 'spouse2Name', label: 'Sutuoktinis 2', value: formData.spouse2Name },
         { 
           id: 'clientName',
-          label: 'Client Name', 
+          label: 'Kliento vardas', 
           value: formData.clientName === 'spouse1' ? formData.spouse1Name : formData.spouse2Name 
         },
       ],
     },
     {
       id: 'children',
-      title: 'Children Information',
+      title: 'Informacija apie vaikus',
       fields: [
-        { id: 'hasChildren', label: 'Has Children', value: formData.hasChildren ? 'Yes' : 'No' },
+        { id: 'hasChildren', label: 'Ar turi vaikų?', value: formData.hasChildren ? 'TAIP' : 'NE' },
         {
           id: 'childrenDetails',
           label: 'Children',
@@ -43,34 +43,34 @@ export default function ReviewInformation() {
                   child.custodialParent === 'spouse1' ? formData.spouse1Name : formData.spouse2Name
                 }${child.custodyReason ? ` - Reason: ${child.custodyReason}` : ''}`
               )).join('\n')
-            : 'No children',
+            : 'Neturi vaikų',
         },
       ],
     },
     {
       id: 'assets',
-      title: 'Asset Information',
+      title: 'Turto ir skolų informacija',
       fields: [
         { 
           id: 'assetsList',
-          label: 'Assets', 
+          label: 'Turtas/skolos', 
           value: formatAssets(formData.assets)
         },
       ],
     },
     {
       id: 'work',
-      title: 'Work Information',
+      title: 'Darbo informacija',
       fields: [
         { 
           id: 'spouse1Work',
-          label: `${formData.spouse1Name || 'Spouse 1'}'s Work Information`, 
-          value: formData.spouse1WorkInfo || 'Not provided'
+          label: `${formData.spouse1Name || 'Spouse 1'}'s Darbo informacija`, 
+          value: formData.spouse1WorkInfo || 'nepateikta'
         },
         { 
           id: 'spouse2Work',
-          label: `${formData.spouse2Name || 'Spouse 2'}'s Work Information`, 
-          value: formData.spouse2WorkInfo || 'Not provided'
+          label: `${formData.spouse2Name || 'Spouse 2'}'s Darbo informacija`, 
+          value: formData.spouse2WorkInfo || 'nepateikta'
         },
       ],
     },
@@ -78,7 +78,7 @@ export default function ReviewInformation() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium text-text">Review Information</h2>
+      <h2 className="text-lg font-medium text-text">Informacijos peržvalga</h2>
       
       <div className="space-y-8">
         {sections.map((section) => (

@@ -3,10 +3,10 @@ import { Monitor, Sun, Moon, Ship } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const themes = [
-  { id: 'system', label: 'System', icon: Monitor, description: 'Follow system preferences' },
-  { id: 'light', label: 'Light', icon: Sun, description: 'Classic light appearance' },
-  { id: 'dark', label: 'Dark', icon: Moon, description: 'Easier on the eyes' },
-  { id: 'navy', label: 'Navy', icon: Ship, description: 'Deep blue appearance' },
+  { id: 'system', label: 'Sistemos', icon: Monitor, description: 'Naudojami kompiuterio nustatymai' },
+  { id: 'light', label: 'Šviesi', icon: Sun, description: 'Klasikinė šviesi išvaizda' },
+  { id: 'dark', label: 'Tamsi', icon: Moon, description: 'Mažiau akinanti išvaizda' },
+  { id: 'navy', label: 'Mėlyna', icon: Ship, description: 'Tamsiai mėlyna išvaizda' },
 ] as const;
 
 export default function SystemSettings() {
@@ -15,9 +15,9 @@ export default function SystemSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-1">Theme</h3>
+        <h3 className="text-lg font-medium mb-1">Spalvų gama</h3>
         <p className="text-text-secondary text-sm mb-4">
-          Choose your preferred color scheme
+          Pasirinkite patogiausią spalvų gamą
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {themes.map((themeOption) => {

@@ -21,7 +21,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-surface text-text max-w-2xl w-full rounded-xl shadow-lg">
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold">Settings</h2>
+          <h2 className="text-xl font-semibold">Nustatymai</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-background rounded-full transition-colors"

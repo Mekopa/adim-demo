@@ -10,8 +10,8 @@ import { LoginCredentials } from '../../types/auth';
 import Logo from '../shared/icons/Logo';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Patikrinkite el. pašto adresą'),
+  password: z.string().min(6, 'Patikrinkite slaptažodį'),
 });
 
 export default function LoginForm() {
@@ -34,7 +34,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       <Logo className="w-20 h-20 text-primary mx-auto" /> {/* Added mx-auto */}
-      <h2 className="text-center text-2xl text-text font-bold">Login to your A.D.I.M</h2>
+      <h2 className="text-center text-2xl text-text font-bold">Prisijunkite prie savo A.D.I.M paskyros</h2>
 
       {error && (
         <div className="rounded-md bg-red-50 p-4">
@@ -44,7 +44,7 @@ export default function LoginForm() {
 
       <div>
         <label htmlFor="email" className="block text-smfont-medium text-text-secondary">
-          Email
+          El. pašto adresas:
         </label>
         <input
           id="email"
@@ -58,7 +58,7 @@ export default function LoginForm() {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
-          Password
+          Slaptažodis
         </label>
         <input
           id="password"
@@ -75,7 +75,7 @@ export default function LoginForm() {
         disabled={isLoading}
         className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary disabled:opacity-50"
       >
-        {isLoading ? 'Logging in...' : 'Login'}
+        {isLoading ? 'Prisijungiama...' : 'Prisijungti'}
       </button>
     </form>
   );

@@ -27,7 +27,7 @@ export default function TopNavigation({
           </button>
         )}
         <h1 className="ml-2 text-2xl font-medium truncate">
-          {currentFolder ? currentFolder.name : 'My Files'}
+          {currentFolder ? currentFolder.name : 'Skaitmeninis seifas'}
         </h1>
       </div>
 

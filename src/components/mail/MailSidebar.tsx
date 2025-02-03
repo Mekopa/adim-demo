@@ -3,12 +3,12 @@ import { Mail, Send, Star, Archive, Trash2, File } from 'lucide-react';
 import { useMailStore } from '../../stores/mailStore';
 
 const folders = [
-  { id: 'inbox', label: 'Inbox', icon: Mail },
-  { id: 'sent', label: 'Sent', icon: Send },
-  { id: 'starred', label: 'Starred', icon: Star },
-  { id: 'archive', label: 'Archive', icon: Archive },
-  { id: 'trash', label: 'Trash', icon: Trash2 },
-  { id: 'drafts', label: 'Drafts', icon: File },
+  { id: 'inbox', label: 'Pašto dėžutė', icon: Mail },
+  { id: 'sent', label: 'Išsiūsti', icon: Send },
+  { id: 'starred', label: 'Pžymėti', icon: Star },
+  { id: 'archive', label: 'Archyvas', icon: Archive },
+  { id: 'trash', label: 'Šiukšlinė', icon: Trash2 },
+  { id: 'drafts', label: 'Juodraščiai', icon: File },
 ];
 
 export default function MailSidebar() {
@@ -19,7 +19,7 @@ export default function MailSidebar() {
       <div className="p-4">
         <button className="w-full bg-primary text-white rounded-lg px-4 py-2 flex items-center justify-center gap-2">
           <Mail className="w-4 h-4" />
-          <span>New Message</span>
+          <span>Naujas laiškas</span>
         </button>
       </div>
 

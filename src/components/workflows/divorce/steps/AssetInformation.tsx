@@ -17,7 +17,7 @@ export default function AssetInformation() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-medium text-text">Asset Information</h2>
+      <h2 className="text-lg font-medium text-text">Turto ir skolų informacija</h2>
       
       <div className="space-y-4">
         {fields.map((field, index) => (
@@ -49,7 +49,7 @@ export default function AssetInformation() {
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Asset
+          Pridėti turtą
         </button>
       </div>
 

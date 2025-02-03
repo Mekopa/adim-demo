@@ -67,7 +67,7 @@ export default function AddChildModal({
         <div className="p-6 space-y-6">
           <div>
             <label htmlFor="age" className="block text-sm font-medium text-text-secondary mb-1">
-              Child's Age
+              Vaiko amžius
             </label>
             <input
               type="number"
@@ -82,7 +82,7 @@ export default function AddChildModal({
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-2">
-              Custodial Parent
+              Kas nori globos?
             </label>
             <div className="space-y-2">
               <label className="flex items-center gap-2">
@@ -112,14 +112,14 @@ export default function AddChildModal({
           {showCustodyReason && (
             <div>
               <label htmlFor="custodyReason" className="block text-sm font-medium text-text-secondary mb-1">
-                Reason for Custody (Optional)
+                Globos prašymo pagrindai (nebūtina)
               </label>
               <textarea
                 id="custodyReason"
                 {...register('custodyReason')}
                 rows={3}
                 className="w-full rounded-lg border-input-border bg-input p-2 text-text focus:ring-2 focus:ring-primary focus:border-transparent"
-                placeholder="Explain why this parent should have custody..."
+                placeholder="Paaiškinkite kodėl prašoma globos..."
               />
             </div>
           )}
