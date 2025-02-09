@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export interface AssistantMessage {
   session_id: string;
-  response_message: string;
+  response: string;
   sender: 'AI';
 }
 
@@ -28,7 +28,7 @@ export const sendChatMessage = async (
       payload.session_id = sessionId;
     }
 
-    const response = await apiClient.post<AssistantMessage>('http://127.0.0.1:8000/assistant/chat/', payload);
+    const response = await apiClient.post<AssistantMessage>('http://192.168.88.254:8000/assistant/chat/', payload);
 
     return response.data;
   } catch (error) {

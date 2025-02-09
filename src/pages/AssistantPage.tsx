@@ -46,7 +46,7 @@ export default function AssistantPage() {
       const assistantMessage: ChatMessageType = {
         id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
-        content: response.response_message,
+        content: response.response,
         timestamp: new Date(),
       };
 
@@ -85,7 +85,7 @@ export default function AssistantPage() {
       const assistantMessage: ChatMessageType = {
         id: Date.now() + Math.random().toString(36).substr(2, 9),
         type: 'assistant',
-        content: response.response_message,
+        content: response.response,
         timestamp: new Date(),
       };
 
