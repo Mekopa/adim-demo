@@ -46,7 +46,7 @@ export default function DashboardPage() {
   return (
     <div className="relative min-h-screen min-w-screen">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome to LegalFlow</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Welcome to A.D.I.M</h1>
         <p className="text-gray-400 mb-12">Your legal document management solution</p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
