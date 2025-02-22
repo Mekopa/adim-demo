@@ -7,7 +7,7 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const API_URL = 'http://127.0.0.1:8000/chat';
+  const API_URL = 'http://192.168.88.254:8000/chat';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
