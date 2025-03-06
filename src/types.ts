@@ -24,7 +24,9 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   files?: UploadedFile[];
+  isLoading?: boolean;
   customer?: string;
+  isError?: boolean;
 }
 
 export interface UploadedFile {

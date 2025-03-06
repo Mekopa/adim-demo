@@ -1,19 +1,68 @@
-import React, { useState } from 'react';
-import { FolderOpen} from 'lucide-react';
-import Modal from '../shared/Modal';
-import FileUploadArea from './FileUploadArea';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, FolderOpen, Upload } from 'lucide-react';
 import { UploadedFile } from '../../types';
+import { useFileSelection } from '../../hooks/useFileSelection';
+import FileUploader from './FileUploader';
+import FileSelector from './FileSelector';
+import ChatHistory from './ChatHistory';
+import MessageInput from './MessageInput';
+import SelectedFiles from './SelectedFiles';
 
-interface EmptyStateProps {
-  onStartChat: (query: string, files: UploadedFile[], customer?: string) => void;
+interface ChatSession {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: Date;
+  isActive: boolean;
 }
 
-export default function EmptyState({ onStartChat }: EmptyStateProps) {
-  const [files, setFiles] = useState<UploadedFile[]>([]);
+interface EmptyStateProps {
+  // Fixed the type from customer?: string to searchVault?: boolean
+  onStartChat: (query: string, files: UploadedFile[], searchVault?: boolean) => void;
+  sessions: ChatSession[];
+  onSelectSession: (sessionId: string) => void;
+}
+
+export default function EmptyState({ onStartChat, sessions, onSelectSession }: EmptyStateProps) {
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [showVaultModal, setShowVaultModal] = useState(false);
-  const [selectedCustomer] = useState<string | undefined>();
+  const [showHistory, setShowHistory] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [showTitle, setShowTitle] = useState(true);
+  const [showActions, setShowActions] = useState(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const {
+    selectedOption,
+    viewState,
+    selectedFiles,
+    selectedFileIds,
+    handleOptionSelect,
+    handleAddFiles,
+    handleRemoveFile,
+    handleBack,
+    handleClose,
+    reopenFileSelector,
+    deselectAll
+  } = useFileSelection();
+
+  useEffect(() => {
+    setHasAnimated(true);
+  }, []);
+
+  useEffect(() => {
+    // Hide title and actions when user starts interacting
+    if (selectedOption || query.length > 0 || showHistory) {
+      setShowTitle(false);
+      if (!selectedOption) {
+        setShowActions(false);
+      }
+    } else {
+      setShowActions(true);
+      setShowTitle(true);
+    }
+  }, [selectedOption, query, showHistory]);
 
   const handleSubmit = () => {
     if (!query.trim()) {
@@ -21,77 +70,195 @@ export default function EmptyState({ onStartChat }: EmptyStateProps) {
       return;
     }
     setError(null);
-    onStartChat(query, files, selectedCustomer);
+    
+    // Log what we're submitting for debugging
+    console.log('Submitting query with:', {
+      query,
+      selectedFiles: selectedFiles.length > 0 ? `${selectedFiles.length} files` : 'no files',
+      isSearchVault: selectedOption === 'search',
+      selectedOption
+    });
+    
+    // Pass the boolean directly to the onStartChat function
+    onStartChat(query, selectedFiles, selectedOption === 'search');
   };
 
-  const handleQueryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setQuery(e.target.value);
-    if (error) {
-      setError(null);
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setError(null);
+    // Show/hide actions based on whether there's text
+    if (!selectedOption) {
+      setShowActions(value.length === 0);
     }
   };
 
+  const handleViewTransition = (action: () => void) => {
+    setIsTransitioning(true);
+    action();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsTransitioning(false);
+      });
+    });
+  };
+
+  const handleShowHistory = () => handleViewTransition(() => setShowHistory(true));
+  const handleHideHistory = () => handleViewTransition(() => setShowHistory(false));
+  const handleOptionSelectWithTransition = (option: 'search' | 'select' | 'upload' | null) => {
+    handleViewTransition(() => handleOptionSelect(option));
+  };
+  const handleBackWithTransition = () => handleViewTransition(handleBack);
+
+  const fileActions = [
+    { id: 'search' as const, icon: Search, label: 'Search Vault' },
+    { id: 'select' as const, icon: FolderOpen, label: 'Select from Vault' },
+    { id: 'upload' as const, icon: Upload, label: 'Upload Document' },
+  ];
+
+  const showMainContent = viewState === 'initial' || viewState === 'selected';
+
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8">
-      <div className="rounded-xl shadow-sm p-8 max-w-2xl w-full">
+    <div className="relative flex items-center justify-center h-full">
+      <div 
+        ref={containerRef}
+        className={`relative rounded-xl shadow-sm overflow-hidden transition-all duration-300 ease-out ${
+          showHistory ? 'h-[600px]' : 'h-[600px]'
+        } ${
+          viewState === 'selecting' 
+            ? 'w-[1000px] max-w-[90vw]' 
+            : 'w-[800px] max-w-[90vw]'
+        }`}
+      >
+        {/* Empty State View */}
+        <div 
+          className={`absolute inset-0 flex flex-col transition-all duration-300 ease-out transform ${
+            showHistory 
+              ? 'scale-95 opacity-0 pointer-events-none' 
+              : 'scale-100 opacity-100'
+          }`}
+        >
+          {/* Main Content Area */}
+          <div 
+            className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-300 ease-out ${
+              showMainContent && !isTransitioning
+                ? 'opacity-100 scale-100'
+                : 'opacity-0 scale-95 pointer-events-none'
+            }`}
+          >
+            <div className="w-full max-w-3xl px-4 sm:px-8 flex flex-col items-center sm:gap-10">
+              {/* Title */}
+              <div className={`text-center transition-all duration-300 ${
+                showTitle 
+                  ? 'opacity-100 transform translate-y-0' 
+                  : 'opacity-0 transform -translate-y-4 pointer-events-none h-0'
+              }`}>
+                <h2 className="text-3xl sm:text-4xl font-bold text-text">How can I help you today?</h2>
+              </div>
 
+              {/* Selected Files and Message Input Container */}
+              <div className="w-full bg-surface rounded-2xl overflow-hidden shadow-lg">
+                {/* Selected Files */}
+                {(selectedFiles.length > 0 || selectedOption === 'search') && (
+                  <div className="p-4 sm:p-6 border-b border-border">
+                    <SelectedFiles
+                      files={selectedFiles}
+                      isSearching={selectedOption === 'search'}
+                      onRemoveFile={handleRemoveFile}
+                      onBack={handleClose}
+                      onReopen={reopenFileSelector}
+                      onDeselectAll={deselectAll}
+                      selectedOption={selectedOption}
+                    />
+                  </div>
+                )}
 
-        <div className="space-y-6">
-          <FileUploadArea files={files} onFilesChange={setFiles} />
+                {/* Message Input */}
+                <MessageInput
+                  value={query}
+                  onChange={handleQueryChange}
+                  onSubmit={handleSubmit}
+                  onShowHistory={handleShowHistory}
+                  error={error}
+                  autoFocus
+                  showHistoryButton={!selectedOption && query.length === 0}
+                />
 
-          <div className="flex gap-4">
-            <button
-              onClick={() => setShowVaultModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 p-4  border border-border rounded-lg hover:bg-surface transition-colors"
-            >
-              <FolderOpen className="w-5 h-5 text-text" />
-              <span className="text-text font-medium">Select from Vault</span>
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            <textarea
-              value={query}
-              onChange={handleQueryChange}
-              placeholder="Enter your query about the documents..."
-              className={`w-full text-text resize-none rounded-lg border p-3 min-h-[80px] ${
-                error ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-blue-500'
-              } focus:ring-2 focus:border-transparent`}
-              rows={3}
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <div className="flex justify-end">
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!query.trim()}
-              >
-                Ask Question
-              </button>
+                {/* File Options */}
+                {viewState === 'initial' && showActions && (
+                  <div className="p-4 sm:p-6 border-t border-border">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {fileActions.map((action, index) => (
+                        <button
+                          key={action.label}
+                          onClick={() => handleOptionSelectWithTransition(action.id)}
+                          className={`flex items-center gap-3 p-4 bg-background rounded-xl hover:bg-background/80 transition-all duration-200 group ${
+                            !hasAnimated ? 'opacity-0' : 'opacity-100'
+                          }`}
+                          style={!hasAnimated ? {
+                            animation: `fadeIn 0.3s ease-out forwards ${index * 50}ms`
+                          } : undefined}
+                        >
+                          <div className="p-2 bg-surface rounded-lg group-hover:bg-primary/10 transition-colors">
+                            <action.icon className="w-5 h-5 text-text-secondary group-hover:text-primary transition-colors" />
+                          </div>
+                          <span className="text-sm font-medium text-text group-hover:text-text transition-colors">
+                            {action.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
+
+          {/* File Selection View */}
+          <div 
+            className={`absolute inset-0 transition-all duration-300 ease-out transform ${
+              viewState === 'selecting' && !isTransitioning
+                ? 'translate-x-0 opacity-100 scale-100'
+                : 'translate-x-full opacity-0 scale-95 pointer-events-none'
+            }`}
+          >
+            <FileSelector
+              onSelect={handleAddFiles}
+              onBack={handleBackWithTransition}
+              initialSelectedFiles={selectedFiles}
+              selectedFileIds={selectedFileIds}
+            />
+          </div>
+
+          {/* File Upload View */}
+          <div 
+            className={`absolute inset-0 transition-all duration-300 ease-out transform ${
+              viewState === 'uploading' && !isTransitioning
+                ? 'translate-x-0 opacity-100 scale-100'
+                : 'translate-x-full opacity-0 scale-95 pointer-events-none'
+            }`}
+          >
+            <FileUploader
+              onUpload={handleAddFiles}
+              onBack={handleBackWithTransition}
+            />
+          </div>
+        </div>
+
+        {/* History View */}
+        <div 
+          className={`absolute inset-0 transition-all duration-300 ease-out transform ${
+            showHistory && !isTransitioning
+              ? 'scale-100 opacity-100' 
+              : 'scale-105 opacity-0 pointer-events-none'
+          }`}
+        >
+          <ChatHistory
+            sessions={sessions}
+            onSelectSession={onSelectSession}
+            onBack={handleHideHistory}
+          />
         </div>
       </div>
-
-      <Modal
-        isOpen={showVaultModal}
-        onClose={() => setShowVaultModal(false)}
-        title="Select from Vault"
-      >
-        <div className="space-y-4">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search documents..."
-              className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <FolderOpen className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
-          </div>
-          <div className="text-center text-gray-500 py-8">
-            No documents found in your vault
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }
