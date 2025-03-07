@@ -1,15 +1,17 @@
-// VaultPage.tsx
+// VaultPage.tsx (Updated)
 import React, { useState, useCallback, useEffect } from 'react';
 import { useVaultStructure } from '../hooks/useVaultStructure';
 import VaultGrid from '../components/vault/VaultGrid';
 import TopNavigation from '../components/vault/TopNavigation';
 import BottomNavigation from '../components/vault/BottomNavigation';
 import ActionBar from '../components/vault/ActionBar';
+import GraphView from '../components/vault/GraphView'; // Import the new GraphView component
 import { Folder, VaultFile } from '../types/vault';
 import { getUniqueFileName, getUniqueFolderName, isNameTaken } from '../utils/nameUtils';
 
 export default function VaultPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showGraphView, setShowGraphView] = useState(false); // New state for graph visualization
 
   /**
    * Centralized Selection State
@@ -32,9 +34,18 @@ export default function VaultPage() {
   } = useVaultStructure();
 
   const currentFolder = getCurrentFolder();
+  // Add this state variable near the top of the component
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>();
   const childFolders = getChildFolders(currentFolder?.id || null);
   const folderFiles = getFolderFiles(currentFolder?.id || null);
   const items = [...childFolders, ...folderFiles];
+
+  /**
+   * Handler to toggle graph visualization view
+   */
+  const handleToggleGraphView = useCallback(() => {
+    setShowGraphView(prev => !prev);
+  }, []);
 
   /**
    * Handler to create a new folder
@@ -134,12 +145,13 @@ export default function VaultPage() {
   return (
     <div className="flex pl-3 flex-col h-full">
       <div className="flex-none">
-        {/* ActionBar receives the entire items array and the current selection */}
+        {/* ActionBar with new visualization toggle */}
         <ActionBar
           onUpload={handleUploadFilesDirectly}
           onCreateFolder={handleCreateFolder}
           items={items}
           selectedItems={selectedItems}
+          onVisualize={handleToggleGraphView} // New prop
           onDownload={() => console.log('Download clicked')}
           onDelete={() => {
             // Example: Delete the first selected item
@@ -154,14 +166,14 @@ export default function VaultPage() {
         <TopNavigation
           currentFolder={currentFolder}
           onBack={() => navigateToFolder(currentFolder?.parentId || null)}
-          onUpload={() => setShowUploadModal(true)}
+          onUpload={() => console.log('Upload clicked')}
           onCreateFolder={handleCreateFolder}
         />
       </div>
 
       <div className="flex-1 overflow-auto">
         <div className="p-3">
-          {/* VaultGrid receives the entire items array and the current selection */}
+          {/* VaultGrid displays files and folders */}
           <VaultGrid
             items={items}
             selectedItems={selectedItems}
@@ -184,6 +196,15 @@ export default function VaultPage() {
         )}
       </div>
 
+      {/* Conditionally render GraphView when showGraphView is true */}
+      {showGraphView && (
+        <GraphView
+          onClose={() => setShowGraphView(false)}
+          currentPath={currentPath}
+          folders={folders}
+          files={folderFiles}
+        />
+      )}
     </div>
   );
 }

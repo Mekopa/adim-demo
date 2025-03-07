@@ -1,8 +1,9 @@
-// ActionBar.tsx
+// Step 1: First, modify ActionBar.tsx to replace grid/list icons with visualization icon
+
+// ActionBar.tsx (modified)
 import React, { useRef } from 'react';
 import {
-  Grid,
-  List,
+  BarChart2,
   DownloadCloud,
   UploadCloud,
   FolderPlus,
@@ -18,6 +19,7 @@ interface ActionBarProps {
   onCreateFolder: () => void;
   items: (Folder | VaultFile)[];
   selectedItems: Set<string>;
+  onVisualize: () => void; // New prop for visualization toggle
 
   /** Action Handlers */
   onDownload?: () => void;
@@ -32,6 +34,7 @@ export default function ActionBar({
   onCreateFolder,
   items,
   selectedItems,
+  onVisualize, // New prop
   onDownload,
   onDelete,
   onShare,
@@ -84,19 +87,14 @@ export default function ActionBar({
 
   return (
     <div className="flex items-center justify-between h-16 px-4 text-text">
-      {/* Left section */}
+      {/* Left section - replaced Grid/List with Visualization */}
       <div className="flex items-center gap-4">
         <button
+          onClick={onVisualize}
           className="p-2 rounded hover:bg-[#2c2c2e] transition-colors"
-          aria-label="Grid View"
+          aria-label="Graph Visualization"
         >
-          <Grid className="w-5 h-5 text-primary" />
-        </button>
-        <button
-          className="p-2 rounded hover:bg-[#2c2c2e] transition-colors"
-          aria-label="List View"
-        >
-          <List className="w-5 h-5 text-primary" />
+          <BarChart2 className="w-5 h-5 text-primary" />
         </button>
       </div>
 
@@ -126,7 +124,7 @@ export default function ActionBar({
         </button>
       </div>
 
-      {/* Right section */}
+      {/* Right section - unchanged */}
       <div className="flex items-center gap-1">
         {/* Download Button */}
         <button
