@@ -1,530 +1,270 @@
 // src/components/vault/GraphView.tsx
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
-import { 
-  X, Filter, Search, File, FileText, Image as ImageIcon, Folder as FolderIcon, 
-  Download, ExternalLink, Info, ChevronDown, ChevronRight, ChevronUp, FileCode, 
-  FileSpreadsheet, Users, Building, Hash, Scale, BookOpen
-} from 'lucide-react';
-import { Folder, VaultFile } from '../../types/vault';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { GraphHeader } from './GraphHeader';
+import { GraphSearchBar } from './GraphSearchBar';
+import { GraphVisualization } from './GraphVisualization';
+import { InfoPanel } from './InfoPanel';
 import { useDocumentGraph } from '../../hooks/useDocumentGraph';
-
-// Define node types
-const NODE_TYPES = {
-  // Structure nodes
-  FOLDER: 'folder',
-  FILE: 'file',
-  
-  // File type nodes
-  PDF: 'pdf',
-  DOCUMENT: 'document',
-  SPREADSHEET: 'spreadsheet',
-  IMAGE: 'image',
-  CODE: 'code',
-  
-  // Content nodes
-  SECTION: 'section',
-  PARAGRAPH: 'paragraph',
-  DEFINITION: 'definition',
-  CLAUSE: 'clause',
-  
-  // Entity nodes from Neo4j
-  PERSON: 'person',
-  ORGANIZATION: 'organization',
-  DATE: 'date',
-  LOCATION: 'location',
-  TERM: 'term',
-  CASE: 'case',
-  COURT: 'court',
-  JUDGE: 'judge',
-  STATUTE: 'statute',
-  PARTY: 'party',
-  ENTITY: 'entity'
-};
-
-// Relationship types between nodes
-const RELATIONSHIP_TYPES = {
-  // Structural relationships
-  CONTAINS: 'contains',
-  PART_OF: 'part_of',
-  SAME_FOLDER: 'same_folder',
-  
-  // Neo4j relationships
-  REFERENCES: 'references',
-  MENTIONS: 'mentions',
-  RELATED_TO: 'related_to',
-  CITES: 'cites',
-  HEARD_IN: 'heard_in',
-  AFFILIATED_WITH: 'affiliated_with'
-};
-
-// Visual styling constants
-const NODE_COLORS = {
-  // Structure colors
-  [NODE_TYPES.FOLDER]: '#4b6bfb',
-  [NODE_TYPES.FILE]: '#64748b',
-  
-  // File type colors
-  [NODE_TYPES.PDF]: '#e11d48',
-  [NODE_TYPES.DOCUMENT]: '#2563eb',
-  [NODE_TYPES.SPREADSHEET]: '#16a34a',
-  [NODE_TYPES.IMAGE]: '#10b981',
-  [NODE_TYPES.CODE]: '#8b5cf6',
-  
-  // Content colors
-  [NODE_TYPES.SECTION]: '#f59e0b',
-  [NODE_TYPES.PARAGRAPH]: '#a16207',
-  [NODE_TYPES.DEFINITION]: '#0891b2',
-  [NODE_TYPES.CLAUSE]: '#db2777',
-  
-  // Entity colors
-  [NODE_TYPES.PERSON]: '#f97316',
-  [NODE_TYPES.ORGANIZATION]: '#ec4899',
-  [NODE_TYPES.DATE]: '#64748b',
-  [NODE_TYPES.LOCATION]: '#06b6d4',
-  [NODE_TYPES.TERM]: '#6366f1',
-  [NODE_TYPES.CASE]: '#f59e0b',
-  [NODE_TYPES.COURT]: '#0891b2',
-  [NODE_TYPES.JUDGE]: '#8b5cf6',
-  [NODE_TYPES.STATUTE]: '#2563eb',
-  [NODE_TYPES.PARTY]: '#16a34a',
-  [NODE_TYPES.ENTITY]: '#8b5cf6'
-};
-
-// Node size by type
-const NODE_SIZES = {
-  [NODE_TYPES.FOLDER]: 16,
-  [NODE_TYPES.FILE]: 12,
-  [NODE_TYPES.PDF]: 12,
-  [NODE_TYPES.DOCUMENT]: 12,
-  [NODE_TYPES.SPREADSHEET]: 12,
-  [NODE_TYPES.IMAGE]: 12,
-  [NODE_TYPES.CODE]: 12,
-  [NODE_TYPES.SECTION]: 8,
-  [NODE_TYPES.PARAGRAPH]: 7,
-  [NODE_TYPES.DEFINITION]: 7,
-  [NODE_TYPES.CLAUSE]: 7,
-  [NODE_TYPES.PERSON]: 6,
-  [NODE_TYPES.ORGANIZATION]: 6,
-  [NODE_TYPES.DATE]: 5,
-  [NODE_TYPES.LOCATION]: 5,
-  [NODE_TYPES.TERM]: 5,
-  [NODE_TYPES.CASE]: 8,
-  [NODE_TYPES.COURT]: 7,
-  [NODE_TYPES.JUDGE]: 7,
-  [NODE_TYPES.STATUTE]: 7,
-  [NODE_TYPES.PARTY]: 6,
-  [NODE_TYPES.ENTITY]: 6
-};
-
-// Interfaces for typed data
-interface GraphNode {
-  id: string;
-  name: string;
-  type: string;
-  subType?: string;
-  parentId?: string;
-  color?: string;
-  size?: number;
-  expanded?: boolean;
-  hidden?: boolean;
-  clusterId?: string;
-  level: number; // 0=folder, 1=file, 2=section, 3=paragraph/content
-  metadata?: {
-    createdAt?: string;
-    updatedAt?: string;
-    size?: number;
-    content?: string;
-    preview?: string;
-    [key: string]: any;
-  };
-  x?: number;
-  y?: number;
-}
-
-interface GraphLink {
-  source: string | any;
-  target: string | any;
-  type: string;
-  strength?: number;
-  color?: string;
-  dashed?: boolean;
-  hidden?: boolean;
-  metadata?: {
-    description?: string;
-    similarity?: number;
-    [key: string]: any;
-  };
-}
-
-interface GraphCluster {
-  id: string;
-  name: string;
-  color: string;
-  nodes: string[];
-}
-
-interface GraphData {
-  nodes: GraphNode[];
-  links: GraphLink[];
-  clusters: Record<string, GraphCluster>;
-}
+import { Folder, VaultFile } from '../../types/vault';
+import { GraphNode, GraphLink } from '../../types/graph';
+import { Users, Building, BookOpen, Scale, Calendar, MapPin, FileText } from 'lucide-react';
 
 interface GraphViewProps {
   onClose: () => void;
   currentPath: string[];
   folders: Folder[];
   files: VaultFile[];
-  selectedDocumentId?: string; // Added selectedDocumentId prop
+  selectedDocumentId?: string;
+  selectedItems?: Set<string>;
+  onNavigateToFolder?: (folderId: string) => void;
 }
 
-export default function GraphView({ 
-  onClose, 
-  currentPath, 
-  folders, 
+// Define entity types and filter options
+const ENTITY_TYPES = {
+  PERSON: 'person',
+  ORGANIZATION: 'organization',
+  LOCATION: 'location',
+  DATE: 'datetime',
+  CONCEPT: 'concept',
+  CASE: 'case',
+  COURT: 'court',
+};
+
+const ENTITY_FILTER_OPTIONS = [
+  { id: 'document', label: 'Documents', icon: <FileText size={14} /> },
+  { id: ENTITY_TYPES.PERSON, label: 'People', icon: <Users size={14} /> },
+  { id: ENTITY_TYPES.ORGANIZATION, label: 'Organizations', icon: <Building size={14} /> },
+  { id: ENTITY_TYPES.CASE, label: 'Legal Cases', icon: <BookOpen size={14} /> },
+  { id: ENTITY_TYPES.COURT, label: 'Courts', icon: <Scale size={14} /> },
+  { id: ENTITY_TYPES.DATE, label: 'Dates', icon: <Calendar size={14} /> },
+  { id: ENTITY_TYPES.LOCATION, label: 'Locations', icon: <MapPin size={14} /> },
+  { id: ENTITY_TYPES.CONCEPT, label: 'Concepts', icon: <BookOpen size={14} /> },
+];
+
+export default function GraphView({
+  onClose,
+  currentPath,
+  folders,
   files,
-  selectedDocumentId 
+  selectedDocumentId,
+  selectedItems = new Set(),
+  onNavigateToFolder,
 }: GraphViewProps) {
-  // Local state variables
+  // Shared state
   const [filters, setFilters] = useState<string[]>([]);
+  const [documentFilter, setDocumentFilter] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-  const [showInfoPanel, setShowInfoPanel] = useState(false);
-  
-  // References for container and graph
+  const [showProperties, setShowProperties] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
-  // Use the document graph hook to fetch real Neo4j data
-  const { 
-    graphData, 
-    loading, 
-    error, 
-    currentFolderId,
-    fetchDocumentGraph,
-    fetchEntityGraph,
-    fetchFolderGraph,
-    clearGraphData
-  } = useDocumentGraph();
+  const { graphData, loading, error, currentFolderId, fetchDocumentGraph, fetchEntityGraph, fetchFolderGraph, clearGraphData } = useDocumentGraph();
 
-  // Update dimensions when container size changes
+  // Update dimensions on container resize
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const newDimensions = {
+        setDimensions({
           width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight
-        };
-        setDimensions(newDimensions);
+          height: containerRef.current.clientHeight,
+        });
       }
     };
-
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Fetch data based on selection and current folder
+  // Fetch data based on selected document or current folder
   useEffect(() => {
     if (selectedDocumentId) {
-      // If a document is selected, load its graph
       fetchDocumentGraph(selectedDocumentId);
+      setDocumentFilter(new Set([selectedDocumentId]));
     } else {
-      // Get current folder ID from path
-      let folderContext = '';
-      
+      let folderId: string | null = null;
       if (currentPath.length > 0) {
-        const currentFolderId = currentPath[currentPath.length - 1];
-        folderContext = currentFolderId;
+        folderId = currentPath[currentPath.length - 1];
       }
-      
-      // Load folder-scoped graph data
-      fetchFolderGraph(folderContext);
+      fetchFolderGraph(folderId);
+      setDocumentFilter(new Set());
     }
-
-    // Clear selection when data source changes
     setSelectedNode(null);
-    setExpandedNodes(new Set());
   }, [selectedDocumentId, currentPath, fetchDocumentGraph, fetchFolderGraph]);
 
-  // Context-aware filter options
-  const filterOptions = useMemo(() => [
-    { id: 'documents', label: 'Documents', icon: <FileText size={14} /> },
-    { id: 'folders', label: 'Folders', icon: <FolderIcon size={14} /> },
-    { id: 'people', label: 'People', icon: <Users size={14} /> },
-    { id: 'organizations', label: 'Organizations', icon: <Building size={14} /> },
-    { id: 'cases', label: 'Legal Cases', icon: <BookOpen size={14} /> },
-    { id: 'statutes', label: 'Statutes', icon: <Scale size={14} /> },
-    { id: 'entities', label: 'Other Entities', icon: <Hash size={14} /> },
-    { id: 'relationships', label: 'All Connections', icon: <ExternalLink size={14} /> }
-  ], []);
+  useEffect(() => {
+    if (selectedDocumentId) {
+      setDocumentFilter(new Set([selectedDocumentId]));
+    } else if (selectedItems.size > 0) {
+      setDocumentFilter(new Set(selectedItems));
+    }
+  }, [selectedDocumentId, selectedItems]);
 
-  // Handle search for entities and documents
-  const handleSearch = useCallback(() => {
-    if (!searchQuery.trim()) return;
-    
-    // If search looks like an entity name, search for that entity
-    if (searchQuery.length > 2) {
-      fetchEntityGraph(searchQuery);
-    }
-  }, [searchQuery, fetchEntityGraph]);
-
-  // Handle node expansion/collapse
-  const toggleNodeExpansion = useCallback((node: GraphNode) => {
-    // Update expanded state in expandedNodes Set
-    const newExpandedNodes = new Set(expandedNodes);
-    
-    if (newExpandedNodes.has(node.id)) {
-      newExpandedNodes.delete(node.id);
-    } else {
-      newExpandedNodes.add(node.id);
-    }
-    
-    setExpandedNodes(newExpandedNodes);
-    
-    // Update node visibility based on expansion state
-    const newNodes = [...graphData.nodes];
-    const newLinks = [...graphData.links];
-    
-    // First, get all descendants of this node
-    const getDescendants = (nodeId: string) => {
-      const directChildren = newNodes.filter(n => n.parentId === nodeId);
-      let allDescendants = [...directChildren];
-      
-      directChildren.forEach(child => {
-        allDescendants = [...allDescendants, ...getDescendants(child.id)];
-      });
-      
-      return allDescendants;
-    };
-    
-    const descendants = getDescendants(node.id);
-    
-    // Update node expanded/hidden state
-    const nodeIndex = newNodes.findIndex(n => n.id === node.id);
-    if (nodeIndex !== -1) {
-      newNodes[nodeIndex] = {
-        ...newNodes[nodeIndex],
-        expanded: newExpandedNodes.has(node.id)
-      };
-    }
-    
-    // Update children hidden state
-    const directChildren = newNodes.filter(n => n.parentId === node.id);
-    
-    directChildren.forEach(child => {
-      const childIndex = newNodes.findIndex(n => n.id === child.id);
-      if (childIndex !== -1) {
-        newNodes[childIndex] = {
-          ...newNodes[childIndex],
-          hidden: !newExpandedNodes.has(node.id)
-        };
+  // Compute document filter options
+  const documentFilterOptions = useMemo(() => {
+    const options: { id: string; name: string; selected: boolean }[] = [];
+    graphData.sourceDocuments?.forEach((docId: string) => {
+      const file = files.find(f => f.id === docId);
+      if (file) {
+        options.push({ id: docId, name: file.name, selected: documentFilter.has(docId) });
+      } else {
+        const docNode = graphData.nodes.find((n: GraphNode) => n.id === docId);
+        if (docNode) {
+          options.push({ id: docId, name: docNode.name, selected: documentFilter.has(docId) });
+        }
       }
     });
-    
-    // If collapsing, hide all descendants
-    if (!newExpandedNodes.has(node.id)) {
-      descendants.forEach(desc => {
-        const descIndex = newNodes.findIndex(n => n.id === desc.id);
-        if (descIndex !== -1) {
-          newNodes[descIndex] = {
-            ...newNodes[descIndex],
-            hidden: true
-          };
-        }
-        
-        // Also collapse any expanded descendants
-        if (newExpandedNodes.has(desc.id)) {
-          newExpandedNodes.delete(desc.id);
-        }
-      });
-    }
-    
-    // Update links visibility
-    newLinks.forEach((link, index) => {
-      const source = typeof link.source === 'string' ? link.source : link.source.id;
-      const target = typeof link.target === 'string' ? link.target : link.target.id;
-      
-      // Hide links to hidden nodes
-      const sourceNode = newNodes.find(n => n.id === source);
-      const targetNode = newNodes.find(n => n.id === target);
-      
-      if (sourceNode && targetNode) {
-        newLinks[index] = {
-          ...newLinks[index],
-          hidden: sourceNode.hidden || targetNode.hidden
-        };
+    files.forEach(file => {
+      if (!options.some(o => o.id === file.id)) {
+        options.push({ id: file.id, name: file.name, selected: documentFilter.has(file.id) });
       }
     });
-    
-    // Update graph data
-    const updatedGraphData = {
-      ...graphData,
-      nodes: newNodes,
-      links: newLinks
-    };
-    
-    // Here we'd update the graph data state
-    // But since we're using the hook's data, we just need to modify the local state
-    // that controls visibility
-  }, [graphData, expandedNodes]);
+    return options;
+  }, [graphData.sourceDocuments, graphData.nodes, files, documentFilter]);
 
-  // Handle node click
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(node);
-    setShowInfoPanel(true);
-    
-    // If this node has children, toggle expansion
-    const hasChildren = graphData.nodes.some(n => n.parentId === node.id);
-    
-    if (hasChildren) {
-      toggleNodeExpansion(node);
-    }
-  }, [graphData.nodes, toggleNodeExpansion]);
-
-  // Handle background click
-  const handleBackgroundClick = useCallback(() => {
-    setSelectedNode(null);
-    setShowInfoPanel(false);
-  }, []);
-
-  // Toggle filter
-  const toggleFilter = useCallback((filterId: string) => {
-    setFilters(prev => 
-      prev.includes(filterId) 
-        ? prev.filter(f => f !== filterId)
-        : [...prev, filterId]
-    );
-  }, []);
-
-  // Filter graph data based on selected filters
+  // Filter graph data based on entity type and document filters
   const filteredGraphData = useMemo(() => {
-    if (filters.length === 0) return graphData;
-    
-    // Create a copy of the graph data
-    const filteredNodes = [...graphData.nodes];
-    const filteredLinks = [...graphData.links];
-    
-    // Apply filters
-    const showDocuments = filters.includes('documents');
-    const showFolders = filters.includes('folders');
-    const showPeople = filters.includes('people');
-    const showOrgs = filters.includes('organizations');
-    const showCases = filters.includes('cases');
-    const showStatutes = filters.includes('statutes');
-    const showEntities = filters.includes('entities');
-    const showRelationships = filters.includes('relationships');
-    
-    // Hide nodes based on filters
-    filteredNodes.forEach((node, index) => {
-      let shouldHide = false;
-      
-      if (node.type === 'folder' && !showFolders) {
-        shouldHide = true;
-      } else if (['file', 'pdf', 'document', 'spreadsheet', 'image', 'code'].includes(node.type) && !showDocuments) {
-        shouldHide = true;
-      } else if (node.type === 'person' && !showPeople && !showEntities) {
-        shouldHide = true;
-      } else if (node.type === 'organization' && !showOrgs && !showEntities) {
-        shouldHide = true;
-      } else if (node.type === 'case' && !showCases && !showEntities) {
-        shouldHide = true;
-      } else if (node.type === 'statute' && !showStatutes && !showEntities) {
-        shouldHide = true;
-      } else if (['court', 'judge', 'party', 'entity', 'term', 'date', 'location'].includes(node.type) && !showEntities) {
-        shouldHide = true;
-      }
-      
-      filteredNodes[index] = {
-        ...filteredNodes[index],
-        hidden: shouldHide || node.hidden
-      };
-    });
-    
-    // Hide links based on filters and connected nodes
-    filteredLinks.forEach((link, index) => {
+    if (filters.length === 0 && documentFilter.size === 0) {
+      return { nodes: graphData.nodes, links: graphData.links };
+    }
+    const nodes = [...graphData.nodes];
+    const links = [...graphData.links];
+    if (filters.length > 0) {
+      nodes.forEach((node, index) => {
+        if (!node.sourceDocument && !filters.includes(node.type)) {
+          nodes[index] = { ...node, hidden: true };
+        }
+      });
+    }
+    if (documentFilter.size > 0) {
+      const connectedEntityIds = new Set<string>();
+      links.forEach(link => {
+        const source = typeof link.source === 'string' ? link.source : link.source.id;
+        const target = typeof link.target === 'string' ? link.target : link.target.id;
+        const sourceNode = nodes.find(n => n.id === source);
+        const targetNode = nodes.find(n => n.id === target);
+        if (sourceNode?.sourceDocument && documentFilter.has(source)) {
+          connectedEntityIds.add(target);
+        } else if (targetNode?.sourceDocument && documentFilter.has(target)) {
+          connectedEntityIds.add(source);
+        }
+      });
+      nodes.forEach((node, index) => {
+        if (!node.sourceDocument && !connectedEntityIds.has(node.id)) {
+          nodes[index] = { ...node, hidden: true };
+        } else if (node.sourceDocument && !documentFilter.has(node.id)) {
+          nodes[index] = { ...node, hidden: true };
+        }
+      });
+    }
+    links.forEach((link, index) => {
       const source = typeof link.source === 'string' ? link.source : link.source.id;
       const target = typeof link.target === 'string' ? link.target : link.target.id;
-      
-      const sourceNode = filteredNodes.find(n => n.id === source);
-      const targetNode = filteredNodes.find(n => n.id === target);
-      
-      let shouldHide = false;
-      
+      const sourceNode = nodes.find(n => n.id === source);
+      const targetNode = nodes.find(n => n.id === target);
       if (sourceNode?.hidden || targetNode?.hidden) {
-        shouldHide = true;
-      } else if (!showRelationships && ![
-        'contains', 'part_of', 'same_folder'
-      ].includes(link.type)) {
-        shouldHide = true;
+        links[index] = { ...link, hidden: true };
       }
-      
-      filteredLinks[index] = {
-        ...filteredLinks[index],
-        hidden: shouldHide || link.hidden
-      };
     });
-    
-    return {
-      nodes: filteredNodes,
-      links: filteredLinks,
-      clusters: graphData.clusters
-    };
-  }, [graphData, filters]);
+    return { nodes, links };
+  }, [graphData, filters, documentFilter]);
 
-  // Prepare visible data for rendering (exclude hidden nodes/links)
   const visibleGraphData = useMemo(() => {
+    const visibleNodes = filteredGraphData.nodes.filter((node: GraphNode) => !node.hidden);
+    const nodeIds = new Set(visibleNodes.map((node: GraphNode) => node.id));
     return {
-      nodes: filteredGraphData.nodes.filter(node => !node.hidden),
-      links: filteredGraphData.links.filter(link => !link.hidden),
-      clusters: filteredGraphData.clusters
+      nodes: visibleNodes,
+      links: filteredGraphData.links.filter(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        return !link.hidden && nodeIds.has(sourceId) && nodeIds.has(targetId);
+      }),
     };
   }, [filteredGraphData]);
 
-  // Header with context information
-  const renderHeader = () => {
-    // Get current folder name
-    let contextInfo = null;
+  // Compute connected entities for the selected node
+  const connectedEntities = useMemo(() => {
+    if (!selectedNode) return [];
     
-    if (selectedDocumentId) {
-      const selectedFile = files.find(f => f.id === selectedDocumentId);
-      contextInfo = (
-        <p className="text-sm text-gray-400">
-          Document: {selectedFile?.name || 'Unknown document'}
-        </p>
-      );
-    } else if (currentPath.length > 0) {
-      const currentFolderId = currentPath[currentPath.length - 1];
-      const currentFolder = folders.find(f => f.id === currentFolderId);
-      contextInfo = (
-        <p className="text-sm text-gray-400">
-          Folder: {currentFolder?.name || 'Unknown folder'}
-        </p>
-      );
+    return visibleGraphData.links
+      .filter(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        return sourceId === selectedNode.id || targetId === selectedNode.id;
+      })
+      .map(link => {
+        const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+        const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+        const connectedNodeId = sourceId === selectedNode.id ? targetId : sourceId;
+        const connectedNode = visibleGraphData.nodes.find((n: GraphNode) => n.id === connectedNodeId);
+        if (!connectedNode) return null;
+        return { connectedNode, link };
+      })
+      .filter(Boolean);
+  }, [selectedNode, visibleGraphData]);
+
+  // Handlers
+  const handleSearch = useCallback(() => {
+    if (!searchQuery.trim()) return;
+    fetchEntityGraph(searchQuery);
+  }, [searchQuery, fetchEntityGraph]);
+
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    console.log("Node clicked:", node);
+    setSelectedNode(node);
+    
+    if (node.sourceDocument) {
+      const newFilter = new Set(documentFilter);
+      if (documentFilter.has(node.id)) {
+        newFilter.delete(node.id);
+      } else {
+        newFilter.add(node.id);
+      }
+      setDocumentFilter(newFilter);
     }
-    
-    return (
-      <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-900/50">
-        <div className="flex items-center gap-2">
-          <FileText className="w-6 h-6 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold text-text">Document Graph</h2>
-            {contextInfo}
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          <X className="w-5 h-5 text-gray-400 hover:text-white" />
-        </button>
-      </div>
-    );
+  }, [documentFilter]);
+
+  const handleBackgroundClick = useCallback(() => {
+    console.log("Background clicked, clearing selection");
+    setSelectedNode(null);
+  }, []);
+
+  const toggleFilter = useCallback((filterId: string) => {
+    setFilters(prev => prev.includes(filterId) ? prev.filter(f => f !== filterId) : [...prev, filterId]);
+  }, []);
+
+  const clearDocumentFilter = useCallback(() => {
+    setDocumentFilter(new Set());
+  }, []);
+
+  const toggleDocumentFilter = useCallback((docId: string) => {
+    setDocumentFilter(prev => {
+      const newFilter = new Set(prev);
+      if (newFilter.has(docId)) {
+        newFilter.delete(docId);
+      } else {
+        newFilter.add(docId);
+      }
+      return newFilter;
+    });
+  }, []);
+
+  // Utility functions for InfoPanel
+  const getNodeIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'person': return <Users size={14} />;
+      case 'organization': return <Building size={14} />;
+      case 'location': return <MapPin size={14} />;
+      case 'datetime': return <Calendar size={14} />;
+      case 'concept': return <BookOpen size={14} />;
+      case 'case': return <BookOpen size={14} />;
+      case 'court': return <Scale size={14} />;
+      default: return <FileText size={14} />;
+    }
   };
 
-  // Format metadata for display
   const formatMetadata = (key: string, value: any): string => {
     if (key === 'created_at' || key === 'updated_at' || key.includes('date')) {
       try {
@@ -533,7 +273,6 @@ export default function GraphView({
         return String(value);
       }
     }
-    
     if (typeof value === 'object') {
       try {
         return JSON.stringify(value);
@@ -541,7 +280,6 @@ export default function GraphView({
         return '[Complex object]';
       }
     }
-    
     return String(value);
   };
 
@@ -549,536 +287,79 @@ export default function GraphView({
     <div className="fixed inset-0 bg-background/90 backdrop-blur-md z-50">
       <div className="absolute inset-4 bg-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden border border-gray-700/50">
         {/* Header */}
-        {renderHeader()}
-
-        {/* Search Bar */}
-        <div className="flex items-center p-2 gap-2 border-b border-gray-700/50">
-          <Search className="w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search for entities or documents..."
-            className="bg-transparent border-none outline-none text-sm text-gray-300 w-full"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+        <div className="flex-none">
+          <GraphHeader 
+            onClose={onClose}
+            currentPath={currentPath}
+            folders={folders}
+            files={files}
+            selectedDocumentId={selectedDocumentId}
           />
-          <button 
-            className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
-            onClick={handleSearch}
-          >
-            Search
-          </button>
         </div>
-
-        {/* Filters */}
-        <div className="border-b border-gray-700/50 p-3 bg-gray-800/50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <span className="text-sm font-medium text-gray-300">Show:</span>
-            <div className="flex flex-wrap gap-2">
-              {filterOptions.map(filter => (
-                <button
-                  key={filter.id}
-                  onClick={() => toggleFilter(filter.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full transition-colors ${
-                    filters.includes(filter.id)
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {filter.icon}
-                  <span>{filter.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+        
+        {/* Search bar */}
+        <div className="flex-none">
+          <GraphSearchBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+          />
+        </div>
+        
+        {/* Graph Visualization (with filters inside) */}
+        <div className="flex-1 relative" ref={containerRef}>
+          <GraphVisualization
+            graphData={visibleGraphData}
+            dimensions={dimensions}
+            loading={loading}
+            error={error}
+            selectedNode={selectedNode}
+            documentFilter={documentFilter}
+            documentFilterOptions={documentFilterOptions}
+            filters={filters}
+            filterOptions={ENTITY_FILTER_OPTIONS}
+            handleNodeClick={handleNodeClick}
+            handleBackgroundClick={handleBackgroundClick}
+            toggleFilter={toggleFilter}
+            clearDocumentFilter={clearDocumentFilter}
+            toggleDocumentFilter={toggleDocumentFilter}
+            graphRef={graphRef}
+          />
           
-          <div className="flex items-center">
-            <span className="text-sm text-gray-400 mr-2">Tip: Click on nodes to explore relationships</span>
-          </div>
-        </div>
-
-        {/* Main content area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Graph visualization */}
-          <div ref={containerRef} className="flex-1 relative">
-            {loading ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : error ? (
-              <div className="absolute inset-0 flex items-center justify-center flex-col p-8">
-                <div className="text-red-500 text-lg mb-2">Error loading graph data</div>
-                <div className="text-gray-400 text-center">{error}</div>
-              </div>
-            ) : dimensions.width > 0 && dimensions.height > 0 && visibleGraphData.nodes.length > 0 ? (
-              <ForceGraph2D
-                ref={graphRef}
-                graphData={visibleGraphData}
-                nodeLabel={(node: GraphNode) => {
-                  let label = `${node.name}`;
-                  
-                  // Add type info
-                  if (node.level === 1) { // File
-                    label += `\nType: ${node.type.toUpperCase()}`;
-                  } else if (node.level >= 2) { // Content
-                    label += `\nType: ${node.type}`;
-                  }
-                  
-                  // Add additional info
-                  if (node.metadata) {
-                    if (node.metadata.description) {
-                      label += `\n${node.metadata.description}`;
-                    }
-                  }
-                  
-                  return label;
+          {/* InfoPanel - Positioned absolutely */}
+          {selectedNode && (
+            <div 
+              className="info-panel-container" 
+              style={{
+                position: 'absolute',
+                right: '0',
+                top: '0',
+                bottom: '0',
+                width: '320px',
+                backgroundColor: '#1f2937', // bg-gray-800
+                borderLeft: '1px solid rgba(75, 85, 99, 0.5)', // border-gray-700/50
+                zIndex: 100,
+                overflowY: 'auto',
+                display: 'block',
+                visibility: 'visible'
+              }}
+            >
+              <InfoPanel
+                selectedNode={selectedNode}
+                showProperties={showProperties}
+                setShowProperties={setShowProperties}
+                documentFilter={documentFilter}
+                toggleDocumentFilter={toggleDocumentFilter}
+                connectedEntities={connectedEntities}
+                handleNodeClick={handleNodeClick}
+                getNodeIcon={getNodeIcon}
+                formatMetadata={formatMetadata}
+                onClose={() => {
+                  console.log('InfoPanel closed');
+                  setSelectedNode(null);
                 }}
-                nodeColor={(node: GraphNode) => node.color || '#999'}
-                nodeVal={(node: GraphNode) => node.size || 5}
-                linkColor={(link: GraphLink) => link.color || '#999'}
-                linkDirectional={true}
-                linkCurvature={0.25}
-                linkDirectionalArrowLength={4}
-                linkDirectionalArrowRelPos={0.8}
-                linkDirectionalParticles={3}
-                linkDirectionalParticleWidth={2}
-                linkWidth={(link: GraphLink) => link.dashed ? 1 : 1.5}
-                linkLineDash={(link: GraphLink) => link.dashed ? [5, 5] : null}
-                onNodeClick={handleNodeClick}
-                onBackgroundClick={handleBackgroundClick}
-                backgroundColor="#0f172a"
-                width={dimensions.width}
-                height={dimensions.height}
-                cooldownTime={3000}
-                d3AlphaDecay={0.02}
-                d3VelocityDecay={0.3}
-                nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
-                  if (!node.x || !node.y) return;
-                  
-                  const size = (node.size || 5) / globalScale;
-                  const isExpanded = expandedNodes.has(node.id);
-                  const hasChildren = filteredGraphData.nodes.some(n => n.parentId === node.id && !n.hidden);
-                  
-                  // Check if node is selected
-                  const isSelected = selectedNode && selectedNode.id === node.id;
-                  
-                  // Draw expansion indicator for nodes with children
-                  if (hasChildren) {
-                    // Draw expansion icon (+ or -)
-                    ctx.fillStyle = isExpanded ? '#ef4444' : '#10b981';
-                    ctx.beginPath();
-                    ctx.arc(node.x - size - 4, node.y, size / 3, 0, 2 * Math.PI);
-                    ctx.fill();
-                    
-                    // Draw + or - symbol
-                    ctx.fillStyle = '#fff';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.font = `bold ${size / 2}px Sans-Serif`;
-                    ctx.fillText(
-                      isExpanded ? '-' : '+',
-                      node.x - size - 4,
-                      node.y
-                    );
-                  }
-                  
-                  // Draw node based on type
-                  if (node.type === 'folder') {
-                    // Folder node (show as a folder shape)
-                    const folderWidth = size * 2;
-                    const folderHeight = size * 1.6;
-                    const tabHeight = folderHeight * 0.25;
-                    
-                    // Draw folder shape
-                    ctx.fillStyle = node.color || '#4b6bfb';
-                    ctx.beginPath();
-                    // Tab
-                    ctx.moveTo(node.x - folderWidth / 2, node.y - folderHeight / 2);
-                    ctx.lineTo(node.x - folderWidth / 4, node.y - folderHeight / 2);
-                    ctx.lineTo(node.x - folderWidth / 4, node.y - folderHeight / 2 + tabHeight);
-                    ctx.lineTo(node.x + folderWidth / 2, node.y - folderHeight / 2 + tabHeight);
-                    ctx.lineTo(node.x + folderWidth / 2, node.y + folderHeight / 2);
-                    ctx.lineTo(node.x - folderWidth / 2, node.y + folderHeight / 2);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Draw border if selected
-                    if (isSelected) {
-                      ctx.strokeStyle = '#fff';
-                      ctx.lineWidth = 2 / globalScale;
-                      ctx.stroke();
-                    }
-                  } else if (node.level === 1 || ['file', 'pdf', 'document', 'spreadsheet', 'image', 'code'].includes(node.type)) {
-                    // File nodes
-                    const fileWidth = size * 1.6;
-                    const fileHeight = size * 2;
-                    const cornerSize = fileHeight * 0.2;
-                    
-                    ctx.fillStyle = node.color || '#64748b';
-                    ctx.beginPath();
-                    ctx.moveTo(node.x - fileWidth / 2, node.y - fileHeight / 2);
-                    ctx.lineTo(node.x + fileWidth / 2 - cornerSize, node.y - fileHeight / 2);
-                    ctx.lineTo(node.x + fileWidth / 2, node.y - fileHeight / 2 + cornerSize);
-                    ctx.lineTo(node.x + fileWidth / 2, node.y + fileHeight / 2);
-                    ctx.lineTo(node.x - fileWidth / 2, node.y + fileHeight / 2);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Draw corner fold
-                    ctx.beginPath();
-                    ctx.moveTo(node.x + fileWidth / 2 - cornerSize, node.y - fileHeight / 2);
-                    ctx.lineTo(node.x + fileWidth / 2 - cornerSize, node.y - fileHeight / 2 + cornerSize);
-                    ctx.lineTo(node.x + fileWidth / 2, node.y - fileHeight / 2 + cornerSize);
-                    ctx.closePath();
-                    ctx.fillStyle = '#fff';
-                    ctx.fill();
-                    
-                    // Draw border if selected
-                    if (isSelected) {
-                      ctx.strokeStyle = '#fff';
-                      ctx.lineWidth = 2 / globalScale;
-                      ctx.stroke();
-                    }
-                    
-                    // Draw file type indicator
-                    ctx.fillStyle = '#fff';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.font = `bold ${size / 1.2}px Sans-Serif`;
-                    
-                    // Get file type abbreviation
-                    let typeAbbr = '';
-                    if (node.type === 'pdf') typeAbbr = 'PDF';
-                    else if (node.type === 'document') typeAbbr = 'DOC';
-                    else if (node.type === 'spreadsheet') typeAbbr = 'XLS';
-                    else if (node.type === 'image') typeAbbr = 'IMG';
-                    else if (node.type === 'code') typeAbbr = 'CODE';
-                    else typeAbbr = 'DOC';
-                    
-                    ctx.fillText(
-                      typeAbbr,
-                      node.x,
-                      node.y
-                    );
-                  } else {
-                    // Entity and other nodes (draw as circles)
-                    ctx.beginPath();
-                    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-                    ctx.fillStyle = node.color || '#64748b';
-                    ctx.fill();
-                    
-                    // Draw border if selected
-                    if (isSelected) {
-                      ctx.strokeStyle = '#fff';
-                      ctx.lineWidth = 2 / globalScale;
-                      ctx.stroke();
-                    }
-                    
-                    // Draw type indicator
-                    ctx.fillStyle = '#fff';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.font = `${size / 1.2}px Sans-Serif`;
-                    
-                    // Get entity type abbreviation
-                    let typeChar = '';
-                    if (node.type === 'person') typeChar = 'P';
-                    else if (node.type === 'organization') typeChar = 'O';
-                    else if (node.type === 'date') typeChar = 'D';
-                    else if (node.type === 'location') typeChar = 'L';
-                    else if (node.type === 'term') typeChar = 'T';
-                    else if (node.type === 'case') typeChar = 'C';
-                    else if (node.type === 'court') typeChar = 'CT';
-                    else if (node.type === 'judge') typeChar = 'J';
-                    else if (node.type === 'statute') typeChar = 'S';
-                    else if (node.type === 'party') typeChar = 'PT';
-                    else typeChar = 'E';
-                    
-                    ctx.fillText(
-                      typeChar,
-                      node.x,
-                      node.y
-                    );
-                  }
-                  
-                  // Draw label for all nodes
-                  const label = node.name.length > 20 
-                    ? node.name.substring(0, 20) + '...' 
-                    : node.name;
-                  
-                  const fontSize = node.level === 0 ? 14 / globalScale :
-                                  node.level === 1 ? 12 / globalScale :
-                                  10 / globalScale;
-                  
-                  ctx.font = `${fontSize}px Sans-Serif`;
-                  const textWidth = ctx.measureText(label).width;
-                  
-                  // Background for text
-                  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                  ctx.fillRect(
-                    node.x - textWidth / 2 - 4,
-                    node.y + size + 2,
-                    textWidth + 8,
-                    fontSize + 4
-                  );
-                  
-                  // Text
-                  ctx.textAlign = 'center';
-                  ctx.textBaseline = 'middle';
-                  ctx.fillStyle = isSelected ? '#fff' : 'rgba(255, 255, 255, 0.9)';
-                  ctx.fillText(
-                    label,
-                    node.x,
-                    node.y + size + fontSize / 2 + 4
-                  );
-                }}
-                onRenderFramePre={(ctx) => {
-                  // Draw clusters
-                  Object.values(filteredGraphData.clusters).forEach(cluster => {
-                    // Get visible nodes in this cluster
-                    const clusterNodes = visibleGraphData.nodes.filter(n => n.clusterId === cluster.id);
-                    if (!clusterNodes.length) return;
-                    
-                    // Calculate the bounding box
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                    
-                    clusterNodes.forEach(node => {
-                      if (!node.x || !node.y) return;
-                      minX = Math.min(minX, node.x);
-                      minY = Math.min(minY, node.y);
-                      maxX = Math.max(maxX, node.x);
-                      maxY = Math.max(maxY, node.y);
-                    });
-                    
-                    // Skip if we couldn't compute a valid bounding box
-                    if (minX === Infinity || maxX === -Infinity) return;
-                    
-                    // Add padding
-                    const padding = 40;
-                    minX -= padding;
-                    minY -= padding;
-                    maxX += padding;
-                    maxY += padding;
-                    
-                    // Draw folder boundary (rounded rectangle)
-                    const radius = 20;
-                    ctx.beginPath();
-                    ctx.moveTo(minX + radius, minY);
-                    ctx.lineTo(maxX - radius, minY);
-                    ctx.quadraticCurveTo(maxX, minY, maxX, minY + radius);
-                    ctx.lineTo(maxX, maxY - radius);
-                    ctx.quadraticCurveTo(maxX, maxY, maxX - radius, maxY);
-                    ctx.lineTo(minX + radius, maxY);
-                    ctx.quadraticCurveTo(minX, maxY, minX, maxY - radius);
-                    ctx.lineTo(minX, minY + radius);
-                    ctx.quadraticCurveTo(minX, minY, minX + radius, minY);
-                    ctx.closePath();
-                    
-                    // Fill with translucent color
-                    ctx.fillStyle = `${cluster.color}20`;
-                    ctx.fill();
-                    
-                    // Draw border
-                    ctx.strokeStyle = cluster.color;
-                    ctx.lineWidth = 1.5;
-                    ctx.stroke();
-                    
-                    // Draw folder name 
-                    const fontSize = 16;
-                    ctx.font = `bold ${fontSize}px Sans-Serif`;
-                    const textWidth = ctx.measureText(cluster.name).width;
-                    
-                    // Background for folder name
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                    ctx.fillRect(
-                      (minX + maxX) / 2 - textWidth / 2 - 8,
-                      minY - fontSize - 8,
-                      textWidth + 16,
-                      fontSize + 10
-                    );
-                    
-                    // Folder name text
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillStyle = '#fff';
-                    ctx.fillText(
-                      cluster.name,
-                      (minX + maxX) / 2,
-                      minY - fontSize / 2 - 3
-                    );
-                  });
-                }}
+                graphRef={graphRef}
               />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center flex-col p-8">
-                <div className="text-gray-400 text-center mb-4">No graph data available.</div>
-                {!selectedDocumentId && currentPath.length === 0 && (
-                  <div className="text-gray-400 text-center">
-                    Select a document to view its graph or navigate to a folder to view folder content.
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          
-          {/* Information panel */}
-          {showInfoPanel && selectedNode && (
-            <div className="w-80 bg-gray-800 border-l border-gray-700/50 overflow-y-auto flex flex-col">
-              <div className="p-4 border-b border-gray-700/50 bg-gray-900/50 flex items-center justify-between">
-                <h3 className="font-semibold text-white">Node Details</h3>
-                <button
-                  onClick={() => setShowInfoPanel(false)}
-                  className="p-1 hover:bg-gray-700 rounded-md"
-                >
-                  <X className="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
-              
-              <div className="p-4 border-b border-gray-700/50">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: selectedNode.color }}>
-                    {selectedNode.type === 'folder' ? (
-                      <FolderIcon className="w-4 h-4 text-white" />
-                    ) : selectedNode.type === 'pdf' ? (
-                      <FileText className="w-4 h-4 text-white" />
-                    ) : selectedNode.type === 'document' ? (
-                      <File className="w-4 h-4 text-white" />
-                    ) : selectedNode.type === 'spreadsheet' ? (
-                      <FileSpreadsheet className="w-4 h-4 text-white" />
-                    ) : (
-                      <Info className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-white">{selectedNode.name}</h4>
-                    <p className="text-sm text-gray-400">{selectedNode.type}</p>
-                  </div>
-                </div>
-                
-                {/* Node properties */}
-                {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    {Object.entries(selectedNode.metadata)
-                      .filter(([key]) => 
-                        !['original_labels', 'preview', 'content', 'metadata_json'].includes(key) && 
-                        selectedNode.metadata[key] !== null && 
-                        selectedNode.metadata[key] !== undefined
-                      )
-                      .map(([key, value]) => (
-                        <div key={key} className="flex justify-between text-sm">
-                          <span className="text-gray-400 capitalize">{key.replace(/_/g, ' ')}:</span>
-                          <span className="text-gray-300 text-right max-w-[180px] truncate">
-                            {formatMetadata(key, value)}
-                          </span>
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-              
-              {/* Related nodes */}
-              <div className="p-4 flex-1 overflow-y-auto">
-                <h4 className="text-sm font-medium text-gray-300 mb-2">Related Items</h4>
-                
-                <div className="space-y-2">
-                  {/* Parent node */}
-                  {selectedNode.parentId && (
-                    <div className="p-2 bg-gray-900/50 rounded-md">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full flex items-center justify-center bg-gray-700">
-                            <ChevronUp className="w-3 h-3 text-gray-300" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-300">
-                              {graphData.nodes.find(n => n.id === selectedNode.parentId)?.name || 'Parent'}
-                            </p>
-                            <p className="text-xs text-gray-500">Parent</p>
-                          </div>
-                        </div>
-                        <button 
-                          className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
-                          onClick={() => {
-                            const parentNode = graphData.nodes.find(n => n.id === selectedNode.parentId);
-                            if (parentNode) handleNodeClick(parentNode);
-                          }}
-                        >
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Child nodes */}
-                  {graphData.nodes
-                    .filter(n => n.parentId === selectedNode.id)
-                    .map(childNode => (
-                      <div key={childNode.id} className="p-2 bg-gray-900/50 rounded-md">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: childNode.color }}>
-                              <ChevronDown className="w-3 h-3 text-white" />
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-300">{childNode.name}</p>
-                              <p className="text-xs text-gray-500">{childNode.type}</p>
-                            </div>
-                          </div>
-                          <button 
-                            className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
-                            onClick={() => handleNodeClick(childNode)}
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  
-                  {/* Connected nodes via links */}
-                  {graphData.links
-                    .filter(link => {
-                      const source = typeof link.source === 'string' ? link.source : link.source.id;
-                      const target = typeof link.target === 'string' ? link.target : link.target.id;
-                      return (source === selectedNode.id || target === selectedNode.id) && 
-                             source !== selectedNode.parentId && 
-                             target !== selectedNode.parentId;
-                    })
-                    .map((link, index) => {
-                      const source = typeof link.source === 'string' ? link.source : link.source.id;
-                      const target = typeof link.target === 'string' ? link.target : link.target.id;
-                      const connectedNodeId = source === selectedNode.id ? target : source;
-                      const connectedNode = graphData.nodes.find(n => n.id === connectedNodeId);
-                      
-                      if (!connectedNode) return null;
-                      
-                      return (
-                        <div key={`${source}-${target}-${index}`} className="p-2 bg-gray-900/50 rounded-md">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: connectedNode.color }}>
-                                <ExternalLink className="w-3 h-3 text-white" />
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-300">{connectedNode.name}</p>
-                                <p className="text-xs text-gray-500">
-                                  {link.type.replace('_', ' ')} • {connectedNode.type}
-                                </p>
-                              </div>
-                            </div>
-                            <button 
-                              className="text-xs bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded"
-                              onClick={() => handleNodeClick(connectedNode)}
-                            >
-                              View
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
             </div>
           )}
         </div>

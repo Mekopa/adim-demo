@@ -1,23 +1,24 @@
-// VaultPage.tsx (Updated)
+// VaultPage.tsx
 import React, { useState, useCallback, useEffect } from 'react';
 import { useVaultStructure } from '../hooks/useVaultStructure';
 import VaultGrid from '../components/vault/VaultGrid';
 import TopNavigation from '../components/vault/TopNavigation';
 import BottomNavigation from '../components/vault/BottomNavigation';
 import ActionBar from '../components/vault/ActionBar';
-import GraphView from '../components/vault/GraphView'; // Import the new GraphView component
+import GraphView from '../components/vault/GraphView'; 
 import { Folder, VaultFile } from '../types/vault';
 import { getUniqueFileName, getUniqueFolderName, isNameTaken } from '../utils/nameUtils';
 
 export default function VaultPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [showGraphView, setShowGraphView] = useState(false); // New state for graph visualization
+  const [showGraphView, setShowGraphView] = useState(false);
 
   /**
    * Centralized Selection State
    * Using a Set to efficiently manage selected item IDs.
    */
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>();
 
   const {
     currentPath,
@@ -34,11 +35,27 @@ export default function VaultPage() {
   } = useVaultStructure();
 
   const currentFolder = getCurrentFolder();
-  // Add this state variable near the top of the component
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | undefined>();
   const childFolders = getChildFolders(currentFolder?.id || null);
   const folderFiles = getFolderFiles(currentFolder?.id || null);
   const items = [...childFolders, ...folderFiles];
+
+  /**
+   * Update selectedDocumentId when selected items change
+   */
+  useEffect(() => {
+    // If exactly one file is selected, set it as the selected document
+    if (selectedItems.size === 1) {
+      const selectedId = Array.from(selectedItems)[0];
+      const selectedFile = folderFiles.find(file => file.id === selectedId);
+      if (selectedFile) {
+        setSelectedDocumentId(selectedId);
+      } else {
+        setSelectedDocumentId(undefined);
+      }
+    } else {
+      setSelectedDocumentId(undefined);
+    }
+  }, [selectedItems, folderFiles]);
 
   /**
    * Handler to toggle graph visualization view
@@ -136,28 +153,37 @@ export default function VaultPage() {
   }, [renameItem]);
 
   /**
-   * Optional: Effect to log selection changes for debugging
+   * Handler for bulk actions on selected items
    */
-  useEffect(() => {
-    console.log('Selected Items:', Array.from(selectedItems));
-  }, [selectedItems]);
+  const handleBulkAction = useCallback((action: string) => {
+    const selectedIds = Array.from(selectedItems);
+    
+    if (selectedIds.length === 0) return;
+    
+    if (action === 'delete') {
+      // Delete all selected items
+      selectedIds.forEach(id => {
+        deleteFileById(id);
+      });
+      setSelectedItems(new Set());
+    } else if (action === 'download') {
+      // Handle bulk download if needed
+      console.log('Bulk download selected items:', selectedIds);
+    }
+  }, [selectedItems, deleteFileById]);
 
   return (
     <div className="flex pl-3 flex-col h-full">
       <div className="flex-none">
-        {/* ActionBar with new visualization toggle */}
+        {/* ActionBar with visualization toggle */}
         <ActionBar
           onUpload={handleUploadFilesDirectly}
           onCreateFolder={handleCreateFolder}
           items={items}
           selectedItems={selectedItems}
-          onVisualize={handleToggleGraphView} // New prop
-          onDownload={() => console.log('Download clicked')}
-          onDelete={() => {
-            // Example: Delete the first selected item
-            const idToDelete = Array.from(selectedItems)[0];
-            if (idToDelete) handleDelete(idToDelete);
-          }}
+          onVisualize={handleToggleGraphView}
+          onDownload={() => handleBulkAction('download')}
+          onDelete={() => handleBulkAction('delete')}
           onShare={() => console.log('Share clicked')}
           onMail={() => console.log('Mail clicked')}
           onMore={() => console.log('More Options clicked')}
@@ -203,6 +229,9 @@ export default function VaultPage() {
           currentPath={currentPath}
           folders={folders}
           files={folderFiles}
+          selectedDocumentId={selectedDocumentId}
+          selectedItems={selectedItems}
+          onNavigateToFolder={handleNavigateToFolder}
         />
       )}
     </div>
