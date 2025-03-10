@@ -1,7 +1,5 @@
 // src/components/vault/GraphView.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { GraphHeader } from './GraphHeader';
-import { GraphSearchBar } from './GraphSearchBar';
 import { GraphVisualization } from './GraphVisualization';
 import { InfoPanel } from './InfoPanel';
 import { useDocumentGraph } from '../../hooks/useDocumentGraph';
@@ -20,25 +18,15 @@ interface GraphViewProps {
 }
 
 // Define entity types and filter options
-const ENTITY_TYPES = {
-  PERSON: 'person',
-  ORGANIZATION: 'organization',
-  LOCATION: 'location',
-  DATE: 'datetime',
-  CONCEPT: 'concept',
-  CASE: 'case',
-  COURT: 'court',
-};
-
 const ENTITY_FILTER_OPTIONS = [
   { id: 'document', label: 'Documents', icon: <FileText size={14} /> },
-  { id: ENTITY_TYPES.PERSON, label: 'People', icon: <Users size={14} /> },
-  { id: ENTITY_TYPES.ORGANIZATION, label: 'Organizations', icon: <Building size={14} /> },
-  { id: ENTITY_TYPES.CASE, label: 'Legal Cases', icon: <BookOpen size={14} /> },
-  { id: ENTITY_TYPES.COURT, label: 'Courts', icon: <Scale size={14} /> },
-  { id: ENTITY_TYPES.DATE, label: 'Dates', icon: <Calendar size={14} /> },
-  { id: ENTITY_TYPES.LOCATION, label: 'Locations', icon: <MapPin size={14} /> },
-  { id: ENTITY_TYPES.CONCEPT, label: 'Concepts', icon: <BookOpen size={14} /> },
+  { id: 'person', label: 'People', icon: <Users size={14} /> },
+  { id: 'organization', label: 'Organizations', icon: <Building size={14} /> },
+  { id: 'case', label: 'Legal Cases', icon: <BookOpen size={14} /> },
+  { id: 'court', label: 'Courts', icon: <Scale size={14} /> },
+  { id: 'datetime', label: 'Dates', icon: <Calendar size={14} /> },
+  { id: 'location', label: 'Locations', icon: <MapPin size={14} /> },
+  { id: 'concept', label: 'Concepts', icon: <BookOpen size={14} /> },
 ];
 
 export default function GraphView({
@@ -50,7 +38,7 @@ export default function GraphView({
   selectedItems = new Set(),
   onNavigateToFolder,
 }: GraphViewProps) {
-  // Shared state
+  // State
   const [filters, setFilters] = useState<string[]>([]);
   const [documentFilter, setDocumentFilter] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,10 +46,12 @@ export default function GraphView({
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [showProperties, setShowProperties] = useState(false);
 
+  // Refs
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
 
-  const { graphData, loading, error, currentFolderId, fetchDocumentGraph, fetchEntityGraph, fetchFolderGraph, clearGraphData } = useDocumentGraph();
+  // Hooks
+  const { graphData, loading, error, fetchDocumentGraph, fetchEntityGraph, fetchFolderGraph } = useDocumentGraph();
 
   // Update dimensions on container resize
   useEffect(() => {
@@ -212,7 +202,6 @@ export default function GraphView({
   }, [searchQuery, fetchEntityGraph]);
 
   const handleNodeClick = useCallback((node: GraphNode) => {
-    console.log("Node clicked:", node);
     setSelectedNode(node);
     
     if (node.sourceDocument) {
@@ -227,7 +216,6 @@ export default function GraphView({
   }, [documentFilter]);
 
   const handleBackgroundClick = useCallback(() => {
-    console.log("Background clicked, clearing selection");
     setSelectedNode(null);
   }, []);
 
@@ -285,29 +273,9 @@ export default function GraphView({
 
   return (
     <div className="fixed inset-0 bg-background/90 backdrop-blur-md z-50">
-      <div className="absolute inset-4 bg-gray-900 rounded-xl shadow-xl flex flex-col overflow-hidden border border-gray-700/50">
-        {/* Header */}
-        <div className="flex-none">
-          <GraphHeader 
-            onClose={onClose}
-            currentPath={currentPath}
-            folders={folders}
-            files={files}
-            selectedDocumentId={selectedDocumentId}
-          />
-        </div>
-        
-        {/* Search bar */}
-        <div className="flex-none">
-          <GraphSearchBar
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            handleSearch={handleSearch}
-          />
-        </div>
-        
-        {/* Graph Visualization (with filters inside) */}
-        <div className="flex-1 relative" ref={containerRef}>
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Main visualization area with everything inside it */}
+        <div className="w-full h-full relative" ref={containerRef}>
           <GraphVisualization
             graphData={visibleGraphData}
             dimensions={dimensions}
@@ -318,11 +286,15 @@ export default function GraphView({
             documentFilterOptions={documentFilterOptions}
             filters={filters}
             filterOptions={ENTITY_FILTER_OPTIONS}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
             handleNodeClick={handleNodeClick}
             handleBackgroundClick={handleBackgroundClick}
             toggleFilter={toggleFilter}
             clearDocumentFilter={clearDocumentFilter}
             toggleDocumentFilter={toggleDocumentFilter}
+            onClose={onClose}
             graphRef={graphRef}
           />
           
@@ -332,16 +304,19 @@ export default function GraphView({
               className="info-panel-container" 
               style={{
                 position: 'absolute',
-                right: '0',
-                top: '0',
-                bottom: '0',
+                right: '16px',
+                top: '16px',
+                bottom: '16px',
                 width: '320px',
-                backgroundColor: '#1f2937', // bg-gray-800
-                borderLeft: '1px solid rgba(75, 85, 99, 0.5)', // border-gray-700/50
+                backgroundColor: 'rgba(31, 41, 55, 0.7)', // bg-gray-800 with opacity
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(75, 85, 99, 0.4)', // border-gray-700/40
+                borderRadius: '12px',
                 zIndex: 100,
-                overflowY: 'auto',
+                overflow: 'hidden',
                 display: 'block',
-                visibility: 'visible'
+                visibility: 'visible',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1)'
               }}
             >
               <InfoPanel
@@ -354,10 +329,7 @@ export default function GraphView({
                 handleNodeClick={handleNodeClick}
                 getNodeIcon={getNodeIcon}
                 formatMetadata={formatMetadata}
-                onClose={() => {
-                  console.log('InfoPanel closed');
-                  setSelectedNode(null);
-                }}
+                onClose={() => setSelectedNode(null)}
                 graphRef={graphRef}
               />
             </div>

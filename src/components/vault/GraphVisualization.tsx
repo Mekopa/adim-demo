@@ -1,9 +1,10 @@
 // src/components/vault/GraphVisualization.tsx
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { GraphNode, GraphLink } from '../../types/graph';
 import { EntityTypeFilters } from './EntityTypeFilters';
 import { DocumentFilterPanel } from './DocumentFilterPanel';
+import { Search, X } from 'lucide-react';
 
 interface GraphVisualizationProps {
   graphData: { nodes: GraphNode[]; links: GraphLink[]; };
@@ -15,11 +16,15 @@ interface GraphVisualizationProps {
   documentFilterOptions: { id: string; name: string; selected: boolean }[];
   filters: string[];
   filterOptions: { id: string; label: string; icon: React.ReactNode }[];
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  handleSearch: () => void;
   handleNodeClick: (node: GraphNode) => void;
   handleBackgroundClick: () => void;
   toggleFilter: (filterId: string) => void;
   clearDocumentFilter: () => void;
   toggleDocumentFilter: (docId: string) => void;
+  onClose: () => void;
   graphRef?: React.RefObject<any>;
 }
 
@@ -33,15 +38,42 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   documentFilterOptions,
   filters,
   filterOptions,
+  searchQuery,
+  setSearchQuery,
+  handleSearch,
   handleNodeClick,
   handleBackgroundClick,
   toggleFilter,
   clearDocumentFilter,
   toggleDocumentFilter,
+  onClose,
   graphRef,
 }) => {
   const localGraphRef = useRef<any>(null);
   const effectiveRef = graphRef || localGraphRef;
+
+  // Filter the entity options to only include types that have data
+  const availableEntityTypes = useMemo(() => {
+    const typeCounts: Record<string, number> = {};
+    
+    // Count nodes of each type
+    graphData.nodes.forEach(node => {
+      if (!node.hidden) {
+        const type = node.type.toLowerCase();
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      }
+    });
+    
+    // Filter options to only include types with data
+    return filterOptions.filter(option => {
+      // Special case for 'document' type
+      if (option.id === 'document') {
+        return documentFilterOptions.length > 0;
+      }
+      // For other entity types, check the count
+      return typeCounts[option.id] > 0;
+    });
+  }, [graphData.nodes, filterOptions, documentFilterOptions]);
 
   useEffect(() => {
     if (effectiveRef.current && graphData.nodes.length > 0 && !loading) {
@@ -192,6 +224,12 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="flex-1 relative">
       {loading ? (
@@ -205,27 +243,69 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
         </div>
       ) : dimensions.width > 0 && dimensions.height > 0 && graphData.nodes.length > 0 ? (
         <>
-          {/* Filter controls - positioned as overlays */}
-          <div className="absolute top-4 left-4 z-10">
-            <div className="bg-gray-800/90 backdrop-blur-sm rounded-lg border border-gray-700/50 shadow-lg w-64 max-h-[calc(100vh-300px)] overflow-auto">
-              <div className="p-3 border-b border-gray-700/50">
-                <h3 className="font-medium text-gray-300">Filters</h3>
+          {/* Close button */}
+          <button 
+            onClick={onClose}
+            className="absolute top-4 right-4 z-50 p-2 bg-gray-800/70 backdrop-blur-sm hover:bg-gray-700/80 text-gray-300 hover:text-white rounded-full transition-colors"
+          >
+            <X size={24} />
+          </button>
+
+          {/* Entity type filters card - top left */}
+          {availableEntityTypes.length > 0 && (
+            <div className="absolute top-4 left-4 z-10">
+              <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/40 shadow-lg overflow-auto max-w-xs">
+                <div className="p-3 border-b border-gray-700/30">
+                  <h3 className="font-medium text-gray-200">Filter by type</h3>
+                </div>
+                <div className="p-2">
+                  <EntityTypeFilters
+                    filterOptions={availableEntityTypes}
+                    filters={filters}
+                    toggleFilter={toggleFilter}
+                  />
+                </div>
               </div>
-              <div className="p-2">
-                <EntityTypeFilters
-                  filterOptions={filterOptions}
-                  filters={filters}
-                  toggleFilter={toggleFilter}
-                />
+            </div>
+          )}
+
+          {/* Document filters card - top right with some offset from close button */}
+          {documentFilterOptions.length > 0 && (
+            <div className="absolute top-16 right-4 z-10">
+              <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/40 shadow-lg overflow-auto max-w-xs">
+                <div className="p-3 border-b border-gray-700/30">
+                  <h3 className="font-medium text-gray-200">Filter by document</h3>
+                </div>
+                <div className="p-2">
+                  <DocumentFilterPanel
+                    documentFilterOptions={documentFilterOptions}
+                    documentFilterSize={documentFilter.size}
+                    clearDocumentFilter={clearDocumentFilter}
+                    toggleDocumentFilter={toggleDocumentFilter}
+                  />
+                </div>
               </div>
-              <div className="p-2 pt-0">
-                <DocumentFilterPanel
-                  documentFilterOptions={documentFilterOptions}
-                  documentFilterSize={documentFilter.size}
-                  clearDocumentFilter={clearDocumentFilter}
-                  toggleDocumentFilter={toggleDocumentFilter}
-                />
-              </div>
+            </div>
+          )}
+
+          {/* Search bar at bottom */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-auto min-w-[300px] max-w-md">
+            <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/60 backdrop-blur-md border border-gray-700/40 shadow-lg rounded-full">
+              <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search for entities..."
+                className="bg-transparent border-none outline-none text-sm text-gray-200 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <button 
+                className="text-xs bg-blue-600/80 hover:bg-blue-500/80 text-white px-3 py-1.5 rounded-full flex-shrink-0"
+                onClick={handleSearch}
+              >
+                Search
+              </button>
             </div>
           </div>
 
