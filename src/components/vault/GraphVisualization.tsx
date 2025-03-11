@@ -5,6 +5,7 @@ import { GraphNode, GraphLink } from '../../types/graph';
 import { EntityTypeFilters } from './EntityTypeFilters';
 import { DocumentFilterPanel } from './DocumentFilterPanel';
 import { Search, X } from 'lucide-react';
+import { DocumentItem } from '../../hooks/useDocumentItems';
 
 interface GraphVisualizationProps {
   graphData: { nodes: GraphNode[]; links: GraphLink[]; };
@@ -13,7 +14,7 @@ interface GraphVisualizationProps {
   error: string | null;
   selectedNode: GraphNode | null;
   documentFilter: Set<string>;
-  documentFilterOptions: { id: string; name: string; selected: boolean }[];
+  documentItems: DocumentItem[];
   filters: string[];
   filterOptions: { id: string; label: string; icon: React.ReactNode }[];
   searchQuery: string;
@@ -35,7 +36,7 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
   error,
   selectedNode,
   documentFilter,
-  documentFilterOptions,
+  documentItems,
   filters,
   filterOptions,
   searchQuery,
@@ -68,12 +69,12 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     return filterOptions.filter(option => {
       // Special case for 'document' type
       if (option.id === 'document') {
-        return documentFilterOptions.length > 0;
+        return documentItems.length > 0;
       }
       // For other entity types, check the count
       return typeCounts[option.id] > 0;
     });
-  }, [graphData.nodes, filterOptions, documentFilterOptions]);
+  }, [graphData.nodes, filterOptions, documentItems]);
 
   useEffect(() => {
     if (effectiveRef.current && graphData.nodes.length > 0 && !loading) {
@@ -270,20 +271,15 @@ export const GraphVisualization: React.FC<GraphVisualizationProps> = ({
           )}
 
           {/* Document filters card - top right with some offset from close button */}
-          {documentFilterOptions.length > 0 && (
+          {documentItems.length > 0 && (
             <div className="absolute top-16 right-4 z-10">
               <div className="bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/40 shadow-lg overflow-auto max-w-xs">
-                <div className="p-3 border-b border-gray-700/30">
-                  <h3 className="font-medium text-gray-200">Filter by document</h3>
-                </div>
-                <div className="p-2">
-                  <DocumentFilterPanel
-                    documentFilterOptions={documentFilterOptions}
-                    documentFilterSize={documentFilter.size}
-                    clearDocumentFilter={clearDocumentFilter}
-                    toggleDocumentFilter={toggleDocumentFilter}
-                  />
-                </div>
+                <DocumentFilterPanel
+                  documentItems={documentItems}
+                  documentFilterSize={documentFilter.size}
+                  clearDocumentFilter={clearDocumentFilter}
+                  toggleDocumentFilter={toggleDocumentFilter}
+                />
               </div>
             </div>
           )}

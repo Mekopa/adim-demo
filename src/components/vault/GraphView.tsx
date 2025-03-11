@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { GraphVisualization } from './GraphVisualization';
 import { InfoPanel } from './InfoPanel';
 import { useDocumentGraph } from '../../hooks/useDocumentGraph';
+import { useDocumentItems } from '../../hooks/useDocumentItems';
 import { Folder, VaultFile } from '../../types/vault';
 import { GraphNode, GraphLink } from '../../types/graph';
 import { Users, Building, BookOpen, Scale, Calendar, MapPin, FileText } from 'lucide-react';
@@ -53,6 +54,14 @@ export default function GraphView({
   // Hooks
   const { graphData, loading, error, fetchDocumentGraph, fetchEntityGraph, fetchFolderGraph } = useDocumentGraph();
 
+  // Get hierarchical document items for the enhanced filter panel
+  const { documentItems } = useDocumentItems({
+    folders,
+    files,
+    selectedDocumentIds: documentFilter,
+    currentPath
+  });
+
   // Update dimensions on container resize
   useEffect(() => {
     const updateDimensions = () => {
@@ -92,35 +101,15 @@ export default function GraphView({
     }
   }, [selectedDocumentId, selectedItems]);
 
-  // Compute document filter options
-  const documentFilterOptions = useMemo(() => {
-    const options: { id: string; name: string; selected: boolean }[] = [];
-    graphData.sourceDocuments?.forEach((docId: string) => {
-      const file = files.find(f => f.id === docId);
-      if (file) {
-        options.push({ id: docId, name: file.name, selected: documentFilter.has(docId) });
-      } else {
-        const docNode = graphData.nodes.find((n: GraphNode) => n.id === docId);
-        if (docNode) {
-          options.push({ id: docId, name: docNode.name, selected: documentFilter.has(docId) });
-        }
-      }
-    });
-    files.forEach(file => {
-      if (!options.some(o => o.id === file.id)) {
-        options.push({ id: file.id, name: file.name, selected: documentFilter.has(file.id) });
-      }
-    });
-    return options;
-  }, [graphData.sourceDocuments, graphData.nodes, files, documentFilter]);
-
   // Filter graph data based on entity type and document filters
   const filteredGraphData = useMemo(() => {
     if (filters.length === 0 && documentFilter.size === 0) {
       return { nodes: graphData.nodes, links: graphData.links };
     }
+    
     const nodes = [...graphData.nodes];
     const links = [...graphData.links];
+    
     if (filters.length > 0) {
       nodes.forEach((node, index) => {
         if (!node.sourceDocument && !filters.includes(node.type)) {
@@ -128,6 +117,7 @@ export default function GraphView({
         }
       });
     }
+    
     if (documentFilter.size > 0) {
       const connectedEntityIds = new Set<string>();
       links.forEach(link => {
@@ -141,6 +131,7 @@ export default function GraphView({
           connectedEntityIds.add(source);
         }
       });
+      
       nodes.forEach((node, index) => {
         if (!node.sourceDocument && !connectedEntityIds.has(node.id)) {
           nodes[index] = { ...node, hidden: true };
@@ -149,6 +140,7 @@ export default function GraphView({
         }
       });
     }
+    
     links.forEach((link, index) => {
       const source = typeof link.source === 'string' ? link.source : link.source.id;
       const target = typeof link.target === 'string' ? link.target : link.target.id;
@@ -158,6 +150,7 @@ export default function GraphView({
         links[index] = { ...link, hidden: true };
       }
     });
+    
     return { nodes, links };
   }, [graphData, filters, documentFilter]);
 
@@ -283,7 +276,7 @@ export default function GraphView({
             error={error}
             selectedNode={selectedNode}
             documentFilter={documentFilter}
-            documentFilterOptions={documentFilterOptions}
+            documentItems={documentItems}
             filters={filters}
             filterOptions={ENTITY_FILTER_OPTIONS}
             searchQuery={searchQuery}
