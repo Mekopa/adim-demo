@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-  FileText, 
-  Briefcase,
-  MessageSquare, 
+  Cloud,
+  BotMessageSquare,
+  //MessageSquare,
+  Mail, 
   Settings, 
   LogOut,
   ChevronRight,
   ChevronLeft,
+  Workflow,
 } from 'lucide-react';
 
 import SettingsModal from './settings/SettingsModal';
@@ -15,9 +17,10 @@ import useAuth from '../contexts/useAuth';
 import Logo from './shared/icons/Logo';
 
 const navigation = [
-  { name: 'Workflows', href: '/workflows', icon: FileText },
-  { name: 'Vault', href: '/vault', icon: Briefcase },
-  { name: 'Assistant', href: '/assistant', icon: MessageSquare },
+  { name: 'Workflows', href: '/workflows', icon: Workflow },
+  { name: 'Cloud', href: '/vault', icon: Cloud },
+  { name: 'Mail', href: '/mail', icon: Mail },
+  { name: 'Assistant', href: '/assistant', icon: BotMessageSquare },
 ];
 
 export default function Sidebar() {
@@ -34,7 +37,7 @@ export default function Sidebar() {
   return (
     <>
       <div 
-        className="flex flex-col bg-surface rounded-r-2xl border-border transition-all duration-300 relative"
+        className="flex flex-col bg-surface h-full rounded-2xl border-border transition-all duration-300 relative"
         style={{ width: isExpanded ? '240px' : '70px' }}
       >
         <div className="flex items-center justify-between px-3 py-4 border-border">
@@ -42,7 +45,7 @@ export default function Sidebar() {
             onClick={() => navigate('/')}
             className="flex items-center gap-3"
           >
-             <Logo className="w-12 h-12 text-primary mx-auto" />
+             <Logo className="text-text" />
             {isExpanded && (
               <span className="font-bold text-text">A.D.I.M</span>
             )}

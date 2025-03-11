@@ -1,10 +1,10 @@
 {
-  "name": "legal-document-generator",
+  "name": "A.D.I.M",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -19,9 +19,15 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.2.3",
+    "react-force-graph-2d": "^1.27.0",
     "react-hook-form": "^7.51.0",
-    "react-markdown": "^9.0.1",
+    "react-markdown": "^9.0.3",
     "react-router-dom": "^6.28.0",
+    "react-syntax-highlighter": "^15.6.1",
+    "reactflow": "^11.11.4",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

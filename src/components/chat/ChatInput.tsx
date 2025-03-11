@@ -1,19 +1,24 @@
-import React, { useState } from 'react';
-import { Send } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Loader2 } from 'lucide-react';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  onNewChat: () => void;
   loading?: boolean;
 }
 
 export default function ChatInput({ onSend, loading }: ChatInputProps) {
   const [message, setMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
       onSend(message);
       setMessage('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     }
   };
 
@@ -24,30 +29,40 @@ export default function ChatInput({ onSend, loading }: ChatInputProps) {
     }
   };
 
+  // Auto-adjust textarea height
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      const newHeight = Math.min(textarea.scrollHeight, 200); // Max 5 lines (40px per line)
+      textarea.style.height = `${newHeight}px`;
+    }
+  }, [message]);
+
   return (
-    <form onSubmit={handleSubmit} className="p-4">
-      <div className="flex items-end space-x-2">
-        <div className="flex-1">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="w-full resize-none rounded-lg border text-text border-border focus:ring-2 focus:ring-blue-500 focus:border-transparent p-3"
-            rows={1}
-            style={{
-              minHeight: '44px',
-              maxHeight: '120px',
-              height: 'auto'
-            }}
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="pb-3 pt-1">
+      <div className="relative">
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Type your message..."
+          className="w-full resize-none rounded-xl focus:outline-none bg-surface p-3 pr-12 text-text min-h-[44px]"
+          style={{
+            maxHeight: '200px',
+          }}
+        />
         <button
           type="submit"
           disabled={loading || !message.trim()}
-          className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+          className="absolute right-3 bottom-3 p-2 text-primary hover:text-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Send className="w-5 h-5" />
+          {loading ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
         </button>
       </div>
     </form>
